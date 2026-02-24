@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "npx prisma generate && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint --fix"
   },
@@ -60,7 +60,9 @@
     "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "docx": "^9.6.0",
     "framer-motion": "11.18.2",
+    "fs": "^0.0.1-security",
     "intl-messageformat": "10.7.16",
     "lucide-react": "^0.562.0",
     "next": "15.5.9",
