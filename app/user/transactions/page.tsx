@@ -1,8 +1,8 @@
 "use client"
 import React, { useState, useEffect } from 'react';
-import { 
-  ArrowDownLeft, Printer, Wifi, Smartphone, FileText, Loader2, AlertCircle, 
-  Tv, Zap, CreditCard, Receipt, Clock 
+import {
+  ArrowDownLeft, Printer, Wifi, Smartphone, FileText, Loader2, AlertCircle,
+  Tv, Zap, CreditCard, Receipt, Clock
 } from 'lucide-react';
 import { getTransactionHistory } from '@/app/actions/user';
 import { CURRENCY } from '@/constants';
@@ -22,7 +22,7 @@ const History: React.FC = () => {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   // 1. Added Cable and Electricity to the UI filters
   const filters = ['All', 'Data', 'Airtime', 'Pins', 'Funding', 'Cable', 'Electricity'];
 
@@ -33,10 +33,10 @@ const History: React.FC = () => {
   const fetchHistory = async () => {
     setIsLoading(true);
     setError('');
-    
+
     // 2. Used a mapping object for cleaner, more scalable translations to backend Enums
     const filterToApiMap: Record<string, string> = {
-      'All': 'All', 
+      'All': 'All',
       'Data': TransactionType.DATA,
       'Airtime': TransactionType.AIRTIME,
       'Pins': TransactionType.RECHARGE_PIN,
@@ -60,26 +60,26 @@ const History: React.FC = () => {
   // Helper for dynamic icon styling based on transaction type
   const getTransactionConfig = (type: string) => {
     switch (type) {
-      case TransactionType.DATA: 
+      case TransactionType.DATA:
         return { icon: <Wifi size={20} />, bg: 'bg-blue-50', color: 'text-blue-600' };
-      case TransactionType.AIRTIME: 
+      case TransactionType.AIRTIME:
         return { icon: <Smartphone size={20} />, bg: 'bg-emerald-50', color: 'text-emerald-600' };
-      case TransactionType.CABLE_TV: 
+      case TransactionType.CABLE_TV:
         return { icon: <Tv size={20} />, bg: 'bg-purple-50', color: 'text-purple-600' };
-      case TransactionType.ELECTRICITY: 
+      case TransactionType.ELECTRICITY:
         return { icon: <Zap size={20} />, bg: 'bg-amber-50', color: 'text-amber-600' };
-      case TransactionType.WALLET_FUNDING: 
+      case TransactionType.WALLET_FUNDING:
         return { icon: <CreditCard size={20} />, bg: 'bg-indigo-50', color: 'text-indigo-600' };
-      case TransactionType.RECHARGE_PIN: 
+      case TransactionType.RECHARGE_PIN:
         return { icon: <Printer size={20} />, bg: 'bg-cyan-50', color: 'text-cyan-600' };
-      default: 
+      default:
         return { icon: <Receipt size={20} />, bg: 'bg-gray-100', color: 'text-gray-600' };
     }
   };
 
   // Helper for Status Badge
   const getStatusBadge = (status: string) => {
-    switch(status?.toUpperCase()) {
+    switch (status?.toUpperCase()) {
       case 'SUCCESS':
         return <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">Success</span>;
       case 'PENDING':
@@ -93,7 +93,7 @@ const History: React.FC = () => {
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar pb-24 p-4 sm:p-6 bg-gray-50 min-h-screen">
-      
+
       {/* Header Area */}
       <div className="mb-6 pt-2">
         <h1 className="text-xl font-bold text-gray-900 tracking-tight">Transaction History</h1>
@@ -106,11 +106,10 @@ const History: React.FC = () => {
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
-              filter === f 
-                ? 'bg-gray-900 text-white shadow-md' 
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
-            }`}
+            className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-200 ${filter === f
+              ? 'bg-gray-900 text-white shadow-md'
+              : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100'
+              }`}
           >
             {f}
           </button>
@@ -132,13 +131,13 @@ const History: React.FC = () => {
         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
           {transactions.length > 0 ? (
             <div className="divide-y divide-gray-50">
-              {transactions.map((tx) => {
+              {transactions.map((tx, index) => {
                 const config = getTransactionConfig(tx.type);
                 const isFunding = tx.type === TransactionType.WALLET_FUNDING;
-                
+
                 return (
-                  <div 
-                    key={tx.id} 
+                  <div
+                    key={`${tx.id}-${index}`}
                     className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors cursor-pointer group"
                   >
                     <div className="flex items-center gap-4">
@@ -146,7 +145,7 @@ const History: React.FC = () => {
                       <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${config.bg} ${config.color}`}>
                         {config.icon}
                       </div>
-                      
+
                       {/* Details */}
                       <div>
                         <p className="font-bold text-gray-900 text-sm mb-0.5 line-clamp-1">
@@ -162,7 +161,7 @@ const History: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Amount & Status */}
                     <div className="text-right flex flex-col justify-center shrink-0">
                       <span className={`font-bold block text-sm mb-1 ${isFunding ? 'text-emerald-600' : 'text-gray-900'}`}>
@@ -184,8 +183,8 @@ const History: React.FC = () => {
               </div>
               <p className="text-gray-900 font-bold mb-1">No transactions yet</p>
               <p className="text-sm text-gray-500 max-w-xs mx-auto">
-                {filter === 'All' 
-                  ? "When you make purchases or fund your wallet, they will appear here." 
+                {filter === 'All'
+                  ? "When you make purchases or fund your wallet, they will appear here."
                   : `You don't have any recent ${filter.toLowerCase()} transactions.`}
               </p>
             </div>

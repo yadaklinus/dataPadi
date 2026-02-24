@@ -1,15 +1,10 @@
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
-import { Link } from "@heroui/link";
 import clsx from "clsx";
 
-import { Providers } from "./providers";
-import MobileWrapper from '@/components/layout/MobileWrapper';
 
 
 import { siteConfig } from "@/config/site";
-import BottomNav from "@/components/layout/BottomNav";
-// import PageTransition from "@/components/modals/animateSlide";
 
 
 
@@ -41,13 +36,13 @@ export default function RootLayout({
       <head />
       <body
         className={clsx(
-         
+
         )}
       >
-        
-          
-            {children} 
-          
+
+
+        {children}
+
       </body>
     </html>
   );

@@ -6,8 +6,6 @@ import { redirect } from 'next/navigation';
 export default async function ProfilePage() {
   const result = await getProfileData();
 
-  console.log(result)
-
   // If the backend returns 401 (Unauthorized), kick back to login [cite: 32]
   if (!result.success || !result.data) {
     redirect('/auth/login');

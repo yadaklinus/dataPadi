@@ -9,16 +9,16 @@ import { authorizedFetch } from '@/lib/api-client';
  */
 export async function initializeGatewayFunding(amount: number) {
   try {
-    const response = await authorizedFetch('/api/v1/mfy/fund/init', {
+    const response = await authorizedFetch('/api/v1/payment/fund/init', {
       method: 'POST',
       body: JSON.stringify({ amount }), // [cite: 239, 240]
     });
-    
+
     const result = await response.json();
-    return { 
-      success: response.ok, 
-      paymentLink: result.paymentLink, // [cite: 249]
-      error: result.message 
+    return {
+      success: response.ok,
+      paymentLink: result.paymentLink,
+      error: result.message
     };
   } catch (error) {
     return { success: false, error: 'Failed to connect to payment gateway' };
@@ -30,16 +30,16 @@ export async function initializeGatewayFunding(amount: number) {
  */
 export async function verifyBVN(bvn: string, firstName: string, lastName: string) {
   try {
-    const response = await authorizedFetch('/api/v1/mfy/kyc/create', {
+    const response = await authorizedFetch('/api/v1/payment/kyc/create', {
       method: 'POST',
       body: JSON.stringify({ bvn }), // [cite: 256]
     });
-    
+
     const result = await response.json();
-    return { 
-      success: response.ok, 
-      data: result.data, 
-      error: result.message || 'Verification failed' 
+    return {
+      success: response.ok,
+      data: result.data,
+      error: result.message || 'Verification failed'
     };
   } catch (error) {
     return { success: false, error: 'Network connection failed' };

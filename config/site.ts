@@ -9,61 +9,38 @@ export const siteConfig = {
       href: "/",
     },
     {
-      label: "Docs",
-      href: "/docs",
+      label: "Dashboard",
+      href: "/user/dashboard",
     },
     {
       label: "Pricing",
-      href: "/pricing",
-    },
-    {
-      label: "Blog",
-      href: "/blog",
-    },
-    {
-      label: "About",
-      href: "/about",
+      href: "/#pricing",
     },
   ],
   navMenuItems: [
     {
       label: "Profile",
-      href: "/profile",
+      href: "/user/profile",
     },
     {
       label: "Dashboard",
-      href: "/dashboard",
-    },
-    {
-      label: "Projects",
-      href: "/projects",
-    },
-    {
-      label: "Team",
-      href: "/team",
-    },
-    {
-      label: "Calendar",
-      href: "/calendar",
+      href: "/user/dashboard",
     },
     {
       label: "Settings",
-      href: "/settings",
+      href: "/user/profile",
     },
     {
       label: "Help & Feedback",
-      href: "/help-feedback",
+      href: "mailto:support@datapadi.com",
     },
     {
       label: "Logout",
-      href: "/logout",
+      href: "/auth/logout",
     },
   ],
   links: {
-    github: "https://github.com/heroui-inc/heroui",
-    twitter: "https://twitter.com/hero_ui",
-    docs: "https://heroui.com",
-    discord: "https://discord.gg/9b6yyZKmH4",
-    sponsor: "https://patreon.com/jrgarciadev",
+    github: "https://datapadi.com",
+    twitter: "https://x.com/datapadi",
   },
 };

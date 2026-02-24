@@ -26,7 +26,7 @@ const NetworkSelector: React.FC<any> = ({ selectedNetwork, onSelect }) => {
   return (
     <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
       {networks.map(net => (
-        <button key={net} onClick={() => onSelect(net)} 
+        <button key={net} onClick={() => onSelect(net)}
           className={`flex-1 min-w-[80px] py-3 px-2 rounded-xl text-sm font-bold border-2 transition-all duration-200 flex flex-col items-center justify-center gap-1
             ${selectedNetwork === net ? getNetworkStyle(net, true) : getNetworkStyle('UNSELECTED')}`}
         >
@@ -43,15 +43,14 @@ const PrintPins: React.FC = () => {
   const [amount, setAmount] = useState('');
   const [quantity, setQuantity] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  
+
   const [inventory, setInventory] = useState<any[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [error, setError] = useState('');
-  
+
   const [isMultiSelect, setIsMultiSelect] = useState(false);
   const [selectedTxIds, setSelectedTxIds] = useState<string[]>([]);
-  
-  // Triggers the separated print modal
+
   const [pinsToPrint, setPinsToPrint] = useState<any[] | null>(null);
 
   useEffect(() => {
@@ -85,7 +84,7 @@ const PrintPins: React.FC = () => {
     try {
       const result = await printRechargePins(selectedNetwork.toUpperCase(), amount, Number(quantity));
       if (result.success) {
-        setActiveTab('history'); 
+        setActiveTab('history');
         setAmount(''); setQuantity(''); setSelectedNetwork(null);
       } else setError(result.error || 'Failed to generate pins');
     } catch (err: any) {
@@ -99,132 +98,193 @@ const PrintPins: React.FC = () => {
     setSelectedTxIds(prev => prev.includes(id) ? prev.filter(txId => txId !== id) : [...prev, id]);
   };
 
-  const handlePrintSingle = (tx: any) => setPinsToPrint(tx.printedPins || []);
-  
+  const handlePrintSingle = (tx: any) => {
+    const pins = (tx.printedPins || []).map((p: any) => ({
+      ...p,
+      network: tx.metadata.network,
+      denomination: tx.metadata.faceValue
+    }));
+    setPinsToPrint(pins);
+  };
+
   const handlePrintMultiple = () => {
     const selectedTxs = inventory.filter(tx => selectedTxIds.includes(tx.id));
-    setPinsToPrint(selectedTxs.flatMap(tx => tx.printedPins || []));
+    const allPins = selectedTxs.flatMap(tx =>
+      (tx.printedPins || []).map((p: any) => ({
+        ...p,
+        network: tx.metadata.network,
+        denomination: tx.metadata.faceValue
+      }))
+    );
+    setPinsToPrint(allPins);
   };
 
   return (
-    <div className="flex-1 overflow-y-auto no-scrollbar pb-48 p-4 sm:p-6 bg-gray-50 relative min-h-screen">
-      
-      {/* Separated Print Mechanism */}
+    <div className="flex-1 overflow-y-auto no-scrollbar pb-48 p-4 sm:p-6 bg-slate-50/50 relative min-h-screen">
+
       {pinsToPrint && (
         <VoucherPrintModal pinsToPrint={pinsToPrint} onClose={() => setPinsToPrint(null)} />
       )}
 
       {/* Header Area */}
-      <div className="flex justify-between items-end mb-6 pt-2 print:hidden">
+      <div className="flex justify-between items-center mb-8 pt-4 print:hidden">
         <div>
-          <h1 className="text-xl font-bold text-gray-900 tracking-tight">Recharge Printing</h1>
-          <p className="text-sm text-gray-500 mt-1">Generate and manage physical recharge pins.</p>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">PIN Printing</h1>
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest mt-1">Generate High-Quality Recharge Vouchers</p>
         </div>
         {activeTab === 'history' && inventory.length > 0 && (
-          <button onClick={() => { setIsMultiSelect(!isMultiSelect); setSelectedTxIds([]); }}
-            className="text-sm font-bold text-primary hover:text-blue-700 transition-colors"
+          <button
+            onClick={() => { setIsMultiSelect(!isMultiSelect); setSelectedTxIds([]); }}
+            className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${isMultiSelect ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+              }`}
           >
-            {isMultiSelect ? 'Cancel Selection' : 'Select Multiple'}
+            {isMultiSelect ? 'Cancel' : 'Select Many'}
           </button>
         )}
       </div>
 
-      {/* Tabs */}
-      <div className="bg-gray-200/60 p-1 rounded-xl flex mb-6 print:hidden">
-        <button onClick={() => setActiveTab('new')} className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${activeTab === 'new' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-          <PlusCircle size={16} /> New Print
+      {/* Modern Tabs */}
+      <div className="bg-white p-1.5 rounded-2xl flex mb-8 border border-slate-200 shadow-sm max-w-sm print:hidden">
+        <button
+          onClick={() => setActiveTab('new')}
+          className={`flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 ${activeTab === 'new' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' : 'text-slate-400 hover:text-slate-600'
+            }`}
+        >
+          <PlusCircle size={14} /> Create
         </button>
-        <button onClick={() => setActiveTab('history')} className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-2 ${activeTab === 'history' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-          <History size={16} /> Pin Inventory
+        <button
+          onClick={() => setActiveTab('history')}
+          className={`flex-1 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 ${activeTab === 'history' ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/20' : 'text-slate-400 hover:text-slate-600'
+            }`}
+        >
+          <History size={14} /> Inventory
         </button>
       </div>
 
       {error && (
-        <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-semibold mb-6 flex items-center gap-3 border border-red-100 shadow-sm print:hidden">
-          <AlertCircle size={18} className="shrink-0" /> {error}
+        <div className="bg-red-50 text-red-700 p-5 rounded-2xl text-sm font-bold mb-8 flex items-start gap-4 border border-red-100 shadow-sm print:hidden">
+          <AlertCircle size={20} className="shrink-0 mt-0.5" />
+          <div>
+            <p className="uppercase tracking-widest text-[10px] mb-1">Error Occurred</p>
+            <p>{error}</p>
+          </div>
         </div>
       )}
 
-      {/* Content */}
-      <div className="print:hidden">
+      <div className="print:hidden max-w-4xl">
         {activeTab === 'new' ? (
-          <div className="space-y-6">
-            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-6">
-              <section>
-                <label className="block text-sm font-bold text-gray-900 mb-3">Select Network</label>
+          <div className="grid lg:grid-cols-5 gap-8">
+            <div className="lg:col-span-3 space-y-8">
+              <section className="bg-white p-6 sm:p-8 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50">
+                <label className="block text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">1. Select Network</label>
                 <NetworkSelector selectedNetwork={selectedNetwork} onSelect={setSelectedNetwork} />
               </section>
-              <section>
-                <label className="block text-sm font-bold text-gray-900 mb-3">Select Denomination</label>
-                <div className="grid grid-cols-3 gap-3">
+
+              <section className="bg-white p-6 sm:p-8 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50">
+                <label className="block text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">2. Denomination</label>
+                <div className="grid grid-cols-3 gap-4">
                   {[100, 200, 500].map((val) => (
-                    <div key={val} onClick={() => setAmount(val.toString())} className={`relative py-4 rounded-xl border-2 cursor-pointer text-center transition-all ${amount === val.toString() ? 'border-primary bg-blue-50 text-primary font-extrabold shadow-sm' : 'border-gray-100 bg-white text-gray-600 font-bold hover:border-gray-200 hover:bg-gray-50'}`}>
-                      {amount === val.toString() && <div className="absolute -top-2 -right-2 bg-primary text-white rounded-full"><CheckCircle2 size={18} /></div>}
-                      {CURRENCY}{val}
-                    </div>
+                    <button
+                      key={val}
+                      onClick={() => setAmount(val.toString())}
+                      className={`group relative py-6 rounded-2xl border-2 transition-all duration-300 ${amount === val.toString()
+                        ? 'border-blue-600 bg-blue-50/50 text-blue-700 font-black'
+                        : 'border-slate-50 bg-slate-50/50 text-slate-400 font-bold hover:border-slate-200 hover:bg-white'
+                        }`}
+                    >
+                      {amount === val.toString() && (
+                        <div className="absolute -top-2 -right-2 bg-blue-600 text-white rounded-full p-0.5 shadow-lg shadow-blue-600/30">
+                          <CheckCircle2 size={16} />
+                        </div>
+                      )}
+                      <span className="text-xl">{CURRENCY}{val}</span>
+                    </button>
                   ))}
                 </div>
               </section>
             </div>
 
-            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-6">
-              <section>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="block text-sm font-bold text-gray-900">Quantity</label>
-                  <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded">Max 100</span>
+            <div className="lg:col-span-2 space-y-8">
+              <section className="bg-white p-6 sm:p-8 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/50">
+                <label className="block text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">3. Quantity</label>
+                <div className="space-y-6">
+                  <Input
+                    type="number"
+                    placeholder="Batch Size (e.g. 10)"
+                    value={quantity}
+                    onChange={(e: any) => setQuantity(e.target.value)}
+                    className="[&>input]:rounded-2xl [&>input]:h-14 [&>input]:text-lg [&>input]:font-bold"
+                  />
+
+                  <div className="bg-slate-900 p-6 rounded-2xl text-white shadow-xl shadow-slate-900/20">
+                    <span className="text-slate-400 text-[10px] font-black uppercase tracking-[0.2em] block mb-2">Estimated Cost</span>
+                    <span className="text-3xl font-black">{amount && quantity ? `${CURRENCY}${(Number(amount) * Number(quantity)).toLocaleString()}` : `${CURRENCY}0`}</span>
+                  </div>
+
+                  <Button
+                    fullWidth
+                    onClick={handleGenerate}
+                    isLoading={isGenerating}
+                    disabled={!selectedNetwork || !amount || !quantity || Number(quantity) > 100}
+                    className="h-16 rounded-2xl bg-blue-600 hover:bg-slate-900 border-none text-white text-lg font-black shadow-xl shadow-blue-600/20"
+                  >
+                    {isGenerating ? 'Generating...' : 'Confirm & Generate'}
+                  </Button>
                 </div>
-                <Input type="number" placeholder="E.g. 10" value={quantity} onChange={(e: any) => setQuantity(e.target.value)} className="mt-2" />
               </section>
-              <div className="bg-gray-900 p-5 rounded-xl text-white shadow-md flex justify-between items-center">
-                <div>
-                  <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider block mb-0.5">Total Billing</span>
-                  <span className="text-2xl font-black">{amount && quantity ? `${CURRENCY}${(Number(amount) * Number(quantity)).toLocaleString()}` : `${CURRENCY}0`}</span>
-                </div>
-              </div>
-              <Button fullWidth onClick={handleGenerate} isLoading={isGenerating} disabled={!selectedNetwork || !amount || !quantity || Number(quantity) > 100}>
-                {isGenerating ? <span className="flex items-center gap-2"><Loader2 size={18} className="animate-spin" /> Generating...</span> : 'Generate Pins'}
-              </Button>
             </div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">
             {isLoadingHistory ? (
-              <div className="text-center py-20 flex flex-col items-center">
-                <Loader2 size={32} className="animate-spin text-primary mb-3" />
-                <p className="text-sm font-semibold text-gray-500">Loading transactions...</p>
+              <div className="sm:col-span-2 text-center py-24 flex flex-col items-center">
+                <Loader2 size={40} className="animate-spin text-blue-600 mb-4" />
+                <p className="text-sm font-black text-slate-400 uppercase tracking-widest">Accessing Vault...</p>
               </div>
             ) : inventory.length > 0 ? (
-              inventory.map((tx) => {
+              inventory.map((tx, index) => {
                 const isSuccess = tx.status === 'SUCCESS';
                 const isSelected = selectedTxIds.includes(tx.id);
                 return (
-                  <div key={tx.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group flex items-stretch">
-                    {isMultiSelect && (
-                      <div onClick={() => isSuccess && toggleSelection(tx.id)} className={`flex items-center justify-center px-4 rounded-l-2xl border-r border-gray-50 transition-colors ${!isSuccess ? 'cursor-not-allowed opacity-40 bg-gray-50' : 'cursor-pointer hover:bg-blue-50/50'} ${isSelected ? 'bg-blue-50' : ''}`}>
-                        <div className={`w-5 h-5 rounded border flex items-center justify-center ${isSelected ? 'bg-primary border-primary' : 'border-gray-300 bg-white'}`}>
-                          {isSelected && <CheckCircle2 size={14} className="text-white" strokeWidth={3} />}
-                        </div>
-                      </div>
-                    )}
-                    <div className="p-5 flex-1">
-                      <div className="flex justify-between items-start mb-4">
+                  <div key={`${tx.id}-${index}`} className={`bg-white rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/30 overflow-hidden transition-all group ${isSelected ? 'ring-2 ring-blue-600/20 border-blue-100 bg-blue-50/10' : ''}`}>
+                    <div className="p-6">
+                      <div className="flex justify-between items-start mb-6">
                         <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-lg ${getNetworkStyle(tx.metadata.network, true)}`}>{tx.metadata.network.charAt(0)}</div>
+                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl shadow-sm ${getNetworkStyle(tx.metadata.network, true)}`}>
+                            {tx.metadata.network.charAt(0)}
+                          </div>
                           <div>
-                            <p className="font-bold text-gray-900 text-base">{tx.metadata.network} {CURRENCY}{tx.metadata.faceValue} Pins</p>
-                            <p className="text-[11px] text-gray-400 font-medium mt-1">{new Date(tx.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}</p>
+                            <p className="font-black text-slate-900 text-lg tracking-tight">{tx.metadata.network} {CURRENCY}{tx.metadata.faceValue}</p>
+                            <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-1">
+                              {new Date(tx.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </p>
                           </div>
                         </div>
-                        <span className={`px-2.5 py-1 rounded text-[10px] font-extrabold uppercase tracking-wide border ${isSuccess ? 'bg-green-50 text-emerald-600 border-green-100' : 'bg-red-50 text-red-600 border-red-100'}`}>{isSuccess ? 'READY' : tx.status}</span>
+                        {isMultiSelect ? (
+                          <button
+                            onClick={() => isSuccess && toggleSelection(tx.id)}
+                            className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${isSelected ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-200 hover:border-slate-300'
+                              }`}
+                          >
+                            {isSelected && <CheckCircle2 size={16} />}
+                          </button>
+                        ) : (
+                          <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest ${isSuccess ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-600'}`}>
+                            {isSuccess ? 'READY' : tx.status}
+                          </span>
+                        )}
                       </div>
-                      <div className="flex justify-between items-center pt-4 border-t border-gray-50">
-                        <p className="text-sm font-medium text-gray-500">Quantity: <span className="text-gray-900 font-bold ml-1">{tx.metadata.quantity}</span></p>
+
+                      <div className="flex justify-between items-center pt-6 border-t border-slate-50">
+                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Qty: <span className="text-slate-900 font-black ml-1">{tx.metadata.quantity} PINS</span></p>
                         {!isMultiSelect && (
-                          <div className="flex items-center gap-2">
-                            <button onClick={() => handlePrintSingle(tx)} disabled={!isSuccess || !tx.printedPins?.length} className="flex items-center gap-1.5 text-primary text-xs sm:text-sm font-bold bg-blue-50 px-4 py-2 rounded-xl hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
-                              <Printer size={16} /> View / Print
-                            </button>
-                          </div>
+                          <button
+                            onClick={() => handlePrintSingle(tx)}
+                            disabled={!isSuccess || !tx.printedPins?.length}
+                            className="flex items-center gap-2 text-blue-600 text-xs font-black uppercase tracking-widest bg-blue-50 px-5 py-3 rounded-xl hover:bg-blue-100 transition-colors disabled:opacity-50"
+                          >
+                            <Printer size={16} /> Print
+                          </button>
                         )}
                       </div>
                     </div>
@@ -232,24 +292,27 @@ const PrintPins: React.FC = () => {
                 );
               })
             ) : (
-              <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 border-dashed">
-                <History size={40} className="mx-auto mb-3 text-gray-300" strokeWidth={1.5} />
-                <p className="text-gray-900 font-bold mb-1">No transaction history</p>
-                <p className="text-sm text-gray-500">Your generated batches will appear here.</p>
+              <div className="sm:col-span-2 text-center py-24 bg-white rounded-[3rem] border-2 border-slate-100 border-dashed">
+                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <History size={32} className="text-slate-300" strokeWidth={1.5} />
+                </div>
+                <p className="text-slate-900 font-black text-xl mb-2 tracking-tight">Vault is Empty</p>
+                <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Your generated batches will appear here.</p>
               </div>
             )}
           </div>
         )}
       </div>
 
-      {/* Floating Multi-Select Print Button */}
+      {/* Floating Multi-Select Action */}
       {isMultiSelect && selectedTxIds.length > 0 && activeTab === 'history' && (
-        <div className="fixed bottom-24 left-0 w-full flex justify-center z-[900] print:hidden pointer-events-none">
-          <div className="pointer-events-auto w-full max-w-sm px-4 animate-in slide-in-from-bottom-5">
-            <Button fullWidth onClick={handlePrintMultiple} className="shadow-[0_8px_30px_rgb(0,0,0,0.12)] bg-gray-900 hover:bg-black text-white">
-              <Printer size={18} className="mr-2" /> Print Selected Batches
-            </Button>
-          </div>
+        <div className="fixed bottom-24 left-0 w-full flex justify-center z-[900] print:hidden px-4">
+          <button
+            onClick={handlePrintMultiple}
+            className="w-full max-w-sm h-16 rounded-2xl bg-slate-900 hover:bg-black text-white font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-2xl shadow-slate-900/40 animate-in slide-in-from-bottom-10"
+          >
+            <Printer size={20} /> Print {selectedTxIds.length} Batches
+          </button>
         </div>
       )}
     </div>

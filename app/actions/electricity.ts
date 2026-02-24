@@ -41,15 +41,15 @@ export interface ElectricityPaymentResponse {
  */
 export async function getDiscos() {
   try {
-    const response = await authorizedFetch('/api/v1/elec/disco'); 
+    const response = await authorizedFetch('/api/v1/electricity/disco');
     const result = await response.json();
 
     if (!response.ok) {
       return { success: false, error: result.message || 'Failed to fetch electricity providers.' };
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       data: result.data
     };
   } catch (error) {
@@ -65,24 +65,24 @@ export async function getDiscos() {
 export async function verifyMeter(discoCode: string, meterNo: string, isPrepaid: boolean) {
   try {
     // The API expects "01" for Prepaid and "02" for Postpaid 
-    const meterType = isPrepaid ? "01" : "02"; 
-    
+    const meterType = isPrepaid ? "01" : "02";
+
     const query = new URLSearchParams({
-      discoCode, 
-      meterNo, 
-      meterType 
+      discoCode,
+      meterNo,
+      meterType
     });
 
-    const response = await authorizedFetch(`/api/v1/elec/verify?${query.toString()}`); 
+    const response = await authorizedFetch(`/api/v1/electricity/verify?${query.toString()}`);
     const result = await response.json();
 
     if (!response.ok) {
-      return { success: false, error: result.message || 'Invalid meter number or mismatching provider.' }; 
+      return { success: false, error: result.message || 'Invalid meter number or mismatching provider.' };
     }
 
-    return { 
-      success: true, 
-      data: result.data 
+    return {
+      success: true,
+      data: result.data
     };
   } catch (error) {
     console.error('Meter Verification Error:', error);
@@ -101,23 +101,23 @@ export async function payElectricity(payload: ElectricityPaymentPayload): Promis
       return { success: false, error: 'Amount must be between N100 and N500,000' };
     }
 
-    const response = await authorizedFetch('/api/v1/elec/pay', { 
+    const response = await authorizedFetch('/api/v1/electricity/pay', {
       method: 'POST',
-      body: JSON.stringify(payload), 
+      body: JSON.stringify(payload),
     });
-    
+
     const result = await response.json();
-    
+
     if (!response.ok) {
       return { success: false, error: result.message || 'Payment failed' };
     }
 
-    return { 
-      success: true, 
-      message: result.message, 
+    return {
+      success: true,
+      message: result.message,
       token: result.token, // Present for prepaid meters [cite: 259, 263]
-      customerName: result.customerName, 
-      transactionId: result.transactionId 
+      customerName: result.customerName,
+      transactionId: result.transactionId
     };
   } catch (error) {
     console.error('Electricity Payment Error:', error);

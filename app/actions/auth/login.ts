@@ -30,27 +30,37 @@ export async function loginUser(formData: FormData) {
       return { success: false, error: data.message || 'Invalid credentials' };
     }
 
-    // Set the JWT in an httpOnly cookie
-    // If using Next.js 15+, ensure this is awaited: await (await cookies()).set(...)
+    // Set the JWT tokens in httpOnly cookies
     const cookieStore = await cookies();
-    cookieStore.set('session_token', data.token, {
+
+    // Access Token (Short-lived)
+    cookieStore.set('accessToken', data.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 24, // 24 hours
+      maxAge: 15 * 60, // 15 minutes
     });
 
-    return { 
-      success: true, 
+    // Refresh Token (Long-lived)
+    cookieStore.set('refreshToken', data.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+
+    return {
+      success: true,
       user: {
         id: data.user.id,
         userName: data.user.userName,
         tier: data.user.tier,
         isKycVerified: data.user.isKycVerified
-      } 
+      }
     };
-    
+
   } catch (error) {
     console.error('Login error:', error);
     return { success: false, error: 'Failed to connect to the server' };

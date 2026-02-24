@@ -1,7 +1,7 @@
 "use client"
 import React, { useState } from 'react';
-import { 
-  Eye, EyeOff, Plus, Smartphone, Wifi, Zap, Tv, 
+import {
+  Eye, EyeOff, Plus, Smartphone, Wifi, Zap, Tv,
   TrendingUp, CreditCard, Receipt, ChevronRight
 } from 'lucide-react';
 import Card from '@/components/ui/Card';
@@ -41,18 +41,18 @@ const Dashboard: React.FC<DashboardProps> = ({ initialData }) => {
   const quickActions = [
     { icon: Wifi, label: 'Buy Data', bg: 'bg-blue-50', color: 'text-blue-600', onClick: () => setIsBuyDataOpen(true) },
     { icon: Smartphone, label: 'Airtime', bg: 'bg-emerald-50', color: 'text-emerald-600', onClick: () => setIsBuyAirtimeOpen(true) },
-    { icon: Tv, label: 'Cable TV', bg: 'bg-purple-50', color: 'text-purple-600', onClick: () =>  setIsBuyCableTV(true)},
+    { icon: Tv, label: 'Cable TV', bg: 'bg-purple-50', color: 'text-purple-600', onClick: () => setIsBuyCableTV(true) },
     { icon: Zap, label: 'Electricity', bg: 'bg-amber-50', color: 'text-amber-600', onClick: () => setIsBuyElectrictyOpen(true) },
   ];
 
   return (
     <div className="flex-1 overflow-y-auto no-scrollbar pb-24 px-4 sm:px-6 bg-gray-50">
-      
+
       {/* Header Area */}
       <div className="flex justify-between items-center mb-6 pt-6">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg shadow-sm">
-             {data.user.fullName.charAt(0)}
+            {data.user.fullName.charAt(0)}
           </div>
           <div>
             <h1 className="text-lg font-bold text-gray-900 tracking-tight">
@@ -70,13 +70,13 @@ const Dashboard: React.FC<DashboardProps> = ({ initialData }) => {
         {/* Abstract Background Elements */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
         <div className="absolute bottom-0 left-0 w-40 h-40 bg-black/10 rounded-full blur-2xl translate-y-1/3 -translate-x-1/3" />
-        
+
         <div className="relative z-10 flex justify-between items-start mb-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-blue-100 text-sm font-medium tracking-wide">Available Balance</span>
-              <button 
-                onClick={() => setShowBalance(!showBalance)} 
+              <button
+                onClick={() => setShowBalance(!showBalance)}
                 className="text-blue-200 hover:text-white transition-colors"
                 aria-label="Toggle balance visibility"
               >
@@ -100,8 +100,8 @@ const Dashboard: React.FC<DashboardProps> = ({ initialData }) => {
 
         {/* Action Footer */}
         <div className="relative z-10 pt-2 border-t border-white/10">
-           <button className="bg-white text-gray-900 px-5 py-3 rounded-full text-sm font-bold flex items-center justify-center gap-2 w-full sm:w-auto hover:bg-gray-50 active:scale-95 transition-all shadow-md">
-            <Plus size={18} strokeWidth={3} className="text-primary" /> 
+          <button className="bg-white text-gray-900 px-5 py-3 rounded-full text-sm font-bold flex items-center justify-center gap-2 w-full sm:w-auto hover:bg-gray-50 active:scale-95 transition-all shadow-md">
+            <Plus size={18} strokeWidth={3} className="text-primary" />
             Fund Wallet
           </button>
         </div>
@@ -130,17 +130,17 @@ const Dashboard: React.FC<DashboardProps> = ({ initialData }) => {
         <h2 className="text-base font-bold text-gray-900">Recent Activity</h2>
         <button className="text-primary text-sm font-semibold hover:text-blue-800 transition-colors">See All</button>
       </div>
-      
+
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
         {data.recentTransactions.length > 0 ? (
           <div className="divide-y divide-gray-50">
-            {data.recentTransactions.map((tx) => {
+            {data.recentTransactions.map((tx, index) => {
               const config = getIconConfig(tx.type);
               const Icon = config.icon;
               const isFunding = tx.type === 'WALLET_FUNDING';
-              
+
               return (
-                <div key={tx.id} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors cursor-pointer group">
+                <div key={`${tx.id}-${index}`} className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors cursor-pointer group">
                   <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-full ${config.bg} flex items-center justify-center ${config.color}`}>
                       <Icon size={20} strokeWidth={2.5} />
@@ -173,8 +173,8 @@ const Dashboard: React.FC<DashboardProps> = ({ initialData }) => {
 
       <BuyDataModal isOpen={isBuyDataOpen} onClose={() => setIsBuyDataOpen(false)} />
       <BuyAirtimeModal isOpen={isBuyAirtimeOpen} onClose={() => setIsBuyAirtimeOpen(false)} />
-      <BuyElectricityModal isOpen={isBuyElectrictyOpen} onClose={()=>setIsBuyElectrictyOpen(false)}/>
-      <BuyCableModal isOpen={isBuyCableTV} onClose={()=> setIsBuyCableTV(false)}/>
+      <BuyElectricityModal isOpen={isBuyElectrictyOpen} onClose={() => setIsBuyElectrictyOpen(false)} />
+      <BuyCableModal isOpen={isBuyCableTV} onClose={() => setIsBuyCableTV(false)} />
     </div>
   );
 };

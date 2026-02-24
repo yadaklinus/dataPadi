@@ -32,13 +32,13 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
   // States
   const [step, setStep] = useState<Step>('PROVIDER');
   const [apiPackages, setApiPackages] = useState<CablePackagesResponse | null>(null);
-  
+
   const [providerId, setProviderId] = useState('');
   const [smartCardNumber, setSmartCardNumber] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [selectedPlan, setSelectedPlan] = useState<UIPlan | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Validation & Transaction States
   const [customerName, setCustomerName] = useState('');
   const [isLoadingPackages, setIsLoadingPackages] = useState(false);
@@ -60,7 +60,7 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
     setIsLoadingPackages(true);
     setErrorMessage('');
     const res = await getCablePackages();
-    
+
     if (res.success && res.data) {
       setApiPackages(res.data);
     } else {
@@ -99,10 +99,10 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
       setErrorMessage('Please enter a valid Smartcard/IUC Number (min 8 digits)');
       return;
     }
-    
+
     setIsValidating(true);
     setErrorMessage('');
-    
+
     const res = await verifySmartCard(providerId, smartCardNumber);
 
     if (res.success && res.customerName) {
@@ -117,16 +117,16 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
 
   const getAvailablePlans = (): UIPlan[] => {
     if (!apiPackages || !providerId) return [];
-    
+
     // Find the correct key in the API response (e.g. "DStv", "GOtv") regardless of case
     const apiKeys = Object.keys(apiPackages);
     const mappedKey = apiKeys.find(k => k.toLowerCase() === providerId.toLowerCase());
-    
+
     if (!mappedKey) return [];
-    
+
     const groups = apiPackages[mappedKey];
     const flatPlans: UIPlan[] = [];
-    
+
     groups.forEach((group) => {
       if (group.PRODUCT && Array.isArray(group.PRODUCT)) {
         group.PRODUCT.forEach((p: CablePackage) => {
@@ -138,18 +138,18 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
         });
       }
     });
-    
+
     return flatPlans;
   };
 
   const availablePlans = getAvailablePlans();
-  const filteredPlans = availablePlans.filter(p => 
+  const filteredPlans = availablePlans.filter(p =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handlePurchase = async () => {
     if (!selectedPlan) return;
-    
+
     if (!phoneNumber || phoneNumber.length < 10) {
       setErrorMessage('Please provide a valid contact phone number');
       return;
@@ -179,24 +179,24 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
   return (
     <BottomSheet isOpen={isOpen} onClose={handleClose} title={step === 'SUCCESS' ? 'Transaction Status' : 'Cable Subscription'}>
       <div className="h-[85svh] w-full flex flex-col flex-1 pb-4">
-        
+
         {/* Global Error Banner */}
         {errorMessage && step !== 'SUCCESS' && (
           <div className="bg-red-50 text-red-600 p-3.5 rounded-xl text-sm font-semibold mb-4 flex items-center gap-3 border border-red-100 shadow-sm shrink-0">
-            <AlertCircle size={18} className="shrink-0" /> 
+            <AlertCircle size={18} className="shrink-0" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         {/* STEP 1: PROVIDER */}
         {step === 'PROVIDER' && (
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }} 
-            animate={{ opacity: 1, x: 0 }} 
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
             className="flex flex-col flex-1 h-full w-full"
           >
             <p className="text-gray-500 mb-4 text-sm font-medium">Select your cable provider</p>
-            
+
             {isLoadingPackages ? (
               <div className="flex flex-col items-center justify-center flex-1 space-y-3 text-purple-600">
                 <Loader2 size={32} className="animate-spin" />
@@ -205,7 +205,7 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
             ) : (
               <div className="space-y-3 overflow-y-auto no-scrollbar pb-4">
                 {CABLE_PROVIDERS.map((provider) => (
-                  <div 
+                  <div
                     key={provider.id}
                     onClick={() => handleProviderSelect(provider.id)}
                     className={`flex justify-between items-center p-4 rounded-xl border border-gray-100 bg-white shadow-sm cursor-pointer transition-colors ${provider.activeTheme}`}
@@ -226,20 +226,20 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
 
         {/* STEP 2: DETAILS (Validation & Plans) */}
         {step === 'DETAILS' && (
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }} 
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col flex-1 h-full w-full"
           >
-            <button 
-              onClick={() => setStep('PROVIDER')} 
+            <button
+              onClick={() => setStep('PROVIDER')}
               className="text-sm text-purple-600 mb-5 font-bold flex items-center gap-1.5 w-fit hover:text-purple-800 transition-colors"
             >
               <ArrowLeft size={16} /> Change Provider
             </button>
-            
+
             <div className="space-y-5 overflow-y-auto no-scrollbar flex-1 pb-4 flex flex-col">
-              
+
               <div className="space-y-1">
                 <Input
                   label="Smartcard / IUC Number"
@@ -258,8 +258,8 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
 
               {!isValidated ? (
                 <div className="mt-2 shrink-0">
-                  <Button 
-                    fullWidth 
+                  <Button
+                    fullWidth
                     onClick={handleValidate}
                     disabled={isValidating || smartCardNumber.length < 8}
                     className="h-14 text-base rounded-2xl shadow-md bg-purple-600 hover:bg-purple-700 text-white"
@@ -286,25 +286,24 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
                   <div className="flex-1 flex flex-col min-h-0">
                     <p className="text-gray-500 mb-2 text-xs uppercase tracking-wider font-semibold">Available Packages</p>
                     <div className="mb-3 shrink-0">
-                      <Input 
+                      <Input
                         placeholder={`Search ${selectedProvider?.name} plans...`}
-                        leftIcon={<Search size={18} className="text-gray-400" />} 
+                        leftIcon={<Search size={18} className="text-gray-400" />}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="mb-0"
                       />
                     </div>
-                    
+
                     <div className="space-y-3 flex-1 overflow-y-auto no-scrollbar pb-2">
                       {filteredPlans.length > 0 ? filteredPlans.map((plan) => (
-                        <div 
+                        <div
                           key={plan.id}
                           onClick={() => setSelectedPlan(plan)}
-                          className={`flex justify-between items-center p-4 rounded-xl border transition-all cursor-pointer shadow-sm ${
-                            selectedPlan?.id === plan.id
+                          className={`flex justify-between items-center p-4 rounded-xl border transition-all cursor-pointer shadow-sm ${selectedPlan?.id === plan.id
                               ? 'border-purple-600 bg-purple-50 ring-1 ring-purple-600'
                               : 'border-gray-100 bg-white hover:border-purple-300'
-                          }`}
+                            }`}
                         >
                           <span className="font-semibold text-gray-800">{plan.name}</span>
                           <span className="font-bold text-purple-700">₦{plan.price.toLocaleString()}</span>
@@ -338,8 +337,8 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
             {/* Anchored Bottom Action for Proceed */}
             {isValidated && (
               <div className="mt-auto pt-4 shrink-0">
-                <Button 
-                  fullWidth 
+                <Button
+                  fullWidth
                   disabled={!selectedPlan || phoneNumber.length < 10}
                   onClick={() => setStep('CONFIRM')}
                   className="h-14 text-base rounded-2xl shadow-md bg-purple-600 hover:bg-purple-700 text-white"
@@ -353,26 +352,26 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
 
         {/* STEP 3: CONFIRM */}
         {step === 'CONFIRM' && (
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }} 
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col flex-1 h-full w-full"
           >
-            <button 
-              onClick={() => setStep('DETAILS')} 
+            <button
+              onClick={() => setStep('DETAILS')}
               className="text-sm text-purple-600 mb-5 font-bold flex items-center gap-1.5 w-fit hover:text-purple-800 transition-colors"
             >
               <ArrowLeft size={16} /> Edit Details
             </button>
-              
+
             {/* Digital Receipt Card */}
             <div className="bg-white border border-gray-100 shadow-sm rounded-3xl p-6 text-center mb-6 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-purple-500 to-purple-700" />
-              
+
               <p className="text-gray-500 text-sm mb-1 mt-2 font-medium">You are about to subscribe to</p>
               <h3 className="text-lg font-bold text-gray-900 mb-2">{selectedPlan?.name}</h3>
               <p className="text-purple-600 font-black text-4xl mb-6">₦{selectedPlan?.price.toLocaleString()}</p>
-              
+
               <div className="border-t-2 border-dashed border-gray-100 relative my-6">
                 <div className="absolute -left-8 -top-3 w-6 h-6 bg-gray-50 rounded-full" />
                 <div className="absolute -right-8 -top-3 w-6 h-6 bg-gray-50 rounded-full" />
@@ -396,8 +395,8 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
 
             {/* Anchored Bottom Action */}
             <div className="mt-auto pt-4 shrink-0">
-              <Button 
-                fullWidth 
+              <Button
+                fullWidth
                 onClick={handlePurchase}
                 disabled={isProcessing}
                 className="h-14 text-base rounded-2xl shadow-md bg-purple-600 hover:bg-purple-700 text-white"
@@ -416,8 +415,8 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
 
         {/* STEP 4: SUCCESS */}
         {step === 'SUCCESS' && (
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }} 
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             className="flex flex-col items-center justify-center flex-1 h-full w-full text-center pb-8"
           >
@@ -428,7 +427,7 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
             <p className="text-gray-500 mb-8 max-w-[250px] mx-auto text-sm leading-relaxed">
               Your {selectedProvider?.name} decoder has been successfully credited.
             </p>
-            
+
             {/* Anchored Bottom Action */}
             <div className="w-full mt-auto pt-4 shrink-0">
               <Button variant="secondary" fullWidth onClick={handleClose} className="h-14 text-base rounded-2xl font-bold bg-gray-100 text-gray-700 hover:bg-gray-200">
