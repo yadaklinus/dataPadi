@@ -1,6 +1,6 @@
 import React from 'react';
-import { Network, NetworkId } from '../../types';
-import { NETWORKS } from '../../constants';
+import { Network, NetworkId } from '@/types/types';
+import { NETWORKS } from '@/constants';
 import { Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -21,8 +21,8 @@ const NetworkSelector: React.FC<NetworkSelectorProps> = ({ selectedNetwork, onSe
             onClick={() => onSelect(network.id)}
             className={`
               relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all
-              ${isSelected 
-                ? 'border-primary bg-blue-50 ring-1 ring-primary ring-offset-1' 
+              ${isSelected
+                ? 'border-primary bg-blue-50 ring-1 ring-primary ring-offset-1'
                 : 'border-gray-100 bg-white hover:bg-gray-50'
               }
             `}
@@ -32,7 +32,7 @@ const NetworkSelector: React.FC<NetworkSelectorProps> = ({ selectedNetwork, onSe
                 <Check size={10} />
               </div>
             )}
-            <div 
+            <div
               className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg mb-2 shadow-sm"
               style={{ backgroundColor: network.color }}
             >

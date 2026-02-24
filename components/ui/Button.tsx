@@ -1,22 +1,22 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, HTMLMotionProps } from 'framer-motion';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends HTMLMotionProps<"button"> {
   variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
   isLoading?: boolean;
   fullWidth?: boolean;
 }
 
-const Button: React.FC<ButtonProps> = ({ 
-  children, 
-  variant = 'primary', 
-  isLoading = false, 
+const Button: React.FC<ButtonProps> = ({
+  children,
+  variant = 'primary',
+  isLoading = false,
   fullWidth = false,
   className = '',
-  ...props 
+  ...props
 }) => {
   const baseStyles = "relative font-semibold rounded-2xl h-12 px-6 flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed";
-  
+
   const variants = {
     primary: "bg-primary text-white hover:bg-primaryDark focus:ring-primary",
     secondary: "bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-300",
