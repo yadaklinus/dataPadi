@@ -41,8 +41,8 @@ export const DATA_PLANS: DataPlan[] = [
 
 export const MOCK_HISTORY: Transaction[] = [
   { id: 't1', type: TransactionType.DATA, amount: 260, date: '2023-10-25T10:30:00', status: TransactionStatus.SUCCESS, description: 'MTN 1GB SME to 0803...', reference: 'DP-20231025-001' },
-  { id: 't2', type: TransactionType.PRINT, amount: 1000, date: '2023-10-24T14:15:00', status: TransactionStatus.SUCCESS, description: 'Printed 10 MTN N100 Pins', reference: 'DP-20231024-002' },
-  { id: 't3', type: TransactionType.FUNDING, amount: 5000, date: '2023-10-23T09:00:00', status: TransactionStatus.SUCCESS, description: 'Wallet Funding via Transfer', reference: 'DP-20231023-003' },
+  { id: 't2', type: TransactionType.RECHARGE_PIN, amount: 1000, date: '2023-10-24T14:15:00', status: TransactionStatus.SUCCESS, description: 'Printed 10 MTN N100 Pins', reference: 'DP-20231024-002' },
+  { id: 't3', type: TransactionType.WALLET_FUNDING, amount: 5000, date: '2023-10-23T09:00:00', status: TransactionStatus.SUCCESS, description: 'Wallet Funding via Transfer', reference: 'DP-20231023-003' },
   { id: 't4', type: TransactionType.AIRTIME, amount: 500, date: '2023-10-22T18:45:00', status: TransactionStatus.FAILED, description: 'Airtime to 0902...', reference: 'DP-20231022-004' },
 ];
 
@@ -70,9 +70,9 @@ export const MOCK_PIN_BATCHES: PrintBatch[] = [
     date: '2023-10-23T09:15:00',
     status: TransactionStatus.SUCCESS,
     pins: [
-       { serial: '777384719238', pin: '1111 2222 3333 4444', status: 'UNUSED' },
-       { serial: '777384719239', pin: '5555 6666 7777 8888', status: 'UNUSED' },
-       { serial: '777384719240', pin: '9999 0000 1111 2222', status: 'UNUSED' },
+      { serial: '777384719238', pin: '1111 2222 3333 4444', status: 'UNUSED' },
+      { serial: '777384719239', pin: '5555 6666 7777 8888', status: 'UNUSED' },
+      { serial: '777384719240', pin: '9999 0000 1111 2222', status: 'UNUSED' },
     ]
   }
 ];
