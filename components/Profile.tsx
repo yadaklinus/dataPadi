@@ -7,6 +7,7 @@ import {
 import { initializeGatewayFunding } from '@/app/actions/payment';
 import { logoutUser } from '@/app/actions/auth/logout';
 import KYCModal from '@/components/modals/KYCModal';
+import PaymentModal from '@/components/modals/PaymentModal';
 import { CURRENCY } from '@/constants';
 
 interface ProfileProps {
@@ -38,6 +39,8 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
   const [fundingAmount, setFundingAmount] = useState('');
   const [isFunding, setIsFunding] = useState(false);
   const [error, setError] = useState('');
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [paymentLink, setPaymentLink] = useState('');
 
   const handleCopyAccount = () => {
     const acc = initialUser.kycData?.virtualAccountNumber;
@@ -61,7 +64,8 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
     const result = await initializeGatewayFunding(amount);
 
     if (result.success && result.paymentLink) {
-      window.open(result.paymentLink, '_blank');
+      setPaymentLink(result.paymentLink);
+      setIsPaymentOpen(true);
       setFundingAmount('');
     } else {
       setError(result.error || 'Could not initialize payment');
@@ -101,8 +105,8 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
           onClick={() => !initialUser.isKycVerified && setIsKYCOpen(true)}
           disabled={initialUser.isKycVerified}
           className={`px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition-all ${initialUser.isKycVerified
-              ? 'bg-green-50 text-emerald-700 border border-green-100 cursor-default'
-              : 'bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 shadow-sm'
+            ? 'bg-green-50 text-emerald-700 border border-green-100 cursor-default'
+            : 'bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 shadow-sm'
             }`}
         >
           {initialUser.isKycVerified
@@ -218,6 +222,11 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
 
       {/* Modals */}
       <KYCModal isOpen={isKYCOpen} onClose={() => setIsKYCOpen(false)} />
+      <PaymentModal
+        isOpen={isPaymentOpen}
+        onClose={() => setIsPaymentOpen(false)}
+        url={paymentLink}
+      />
     </div>
   );
 };

@@ -51,9 +51,10 @@ export interface DataPlan {
 export enum TransactionType {
   DATA = 'DATA',
   AIRTIME = 'AIRTIME',
-  PRINT = 'PRINT',
-  FUNDING = 'FUNDING',
+  RECHARGE_PIN = 'RECHARGE_PIN',
+  WALLET_FUNDING = 'WALLET_FUNDING',
   ELECTRICITY = 'ELECTRICITY',
+  CABLE_TV = 'CABLE_TV',
 }
 
 export enum TransactionStatus {

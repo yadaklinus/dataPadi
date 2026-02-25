@@ -6,22 +6,16 @@ import {
 } from 'lucide-react';
 import { getTransactionHistory } from '@/app/actions/user';
 import { CURRENCY } from '@/constants';
-
-// Backend Enum Mapping 
-enum TransactionType {
-  DATA = 'DATA',
-  AIRTIME = 'AIRTIME',
-  RECHARGE_PIN = 'RECHARGE_PIN',
-  WALLET_FUNDING = 'WALLET_FUNDING',
-  CABLE_TV = 'CABLE_TV',
-  ELECTRICITY = 'ELECTRICITY'
-}
+import { Transaction, TransactionType } from '@/types/types';
+import TransactionDetailsModal from '@/components/modals/TransactionDetailsModal';
 
 const History: React.FC = () => {
   const [filter, setFilter] = useState('All');
-  const [transactions, setTransactions] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // 1. Added Cable and Electricity to the UI filters
   const filters = ['All', 'Data', 'Airtime', 'Pins', 'Funding', 'Cable', 'Electricity'];
@@ -50,11 +44,20 @@ const History: React.FC = () => {
     const result = await getTransactionHistory(1, 50, apiType);
 
     if (result.success) {
-      setTransactions(result.data);
+      setTransactions(result.data.map((tx: any) => ({
+        ...tx,
+        date: tx.date || tx.createdAt,
+        type: tx.type as TransactionType
+      })) as Transaction[]);
     } else {
       setError(result.error || 'Failed to fetch transactions.');
     }
     setIsLoading(false);
+  };
+
+  const handleTransactionClick = (tx: Transaction) => {
+    setSelectedTransaction(tx);
+    setIsModalOpen(true);
   };
 
   // Helper for dynamic icon styling based on transaction type
@@ -138,6 +141,7 @@ const History: React.FC = () => {
                 return (
                   <div
                     key={`${tx.id}-${index}`}
+                    onClick={() => handleTransactionClick(tx)}
                     className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors cursor-pointer group"
                   >
                     <div className="flex items-center gap-4">
@@ -149,13 +153,13 @@ const History: React.FC = () => {
                       {/* Details */}
                       <div>
                         <p className="font-bold text-gray-900 text-sm mb-0.5 line-clamp-1">
-                          {tx.metadata?.planName || tx.metadata?.network || tx.type.replace('_', ' ')}
+                          {(tx as any).metadata?.planName || (tx as any).metadata?.network || tx.type.replace('_', ' ')}
                         </p>
                         <div className="flex items-center gap-2">
                           <p className="text-xs text-gray-500 font-medium">
-                            {new Date(tx.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            {new Date(tx.date || (tx as any).createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                           </p>
-                          {tx.type === TransactionType.RECHARGE_PIN && (
+                          {tx.type === ('PRINT' as any) && (
                             <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">Pins</span>
                           )}
                         </div>
@@ -191,6 +195,13 @@ const History: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Transaction Details Modal */}
+      <TransactionDetailsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        transaction={selectedTransaction}
+      />
     </div>
   );
 };
