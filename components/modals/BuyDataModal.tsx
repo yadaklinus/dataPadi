@@ -106,7 +106,7 @@ const BuyDataModal: React.FC<BuyDataModalProps> = ({ isOpen, onClose }) => {
       if (group.PRODUCT && Array.isArray(group.PRODUCT)) {
         group.PRODUCT.forEach((p: any) => {
           flatPlans.push({
-            id: p.PRODUCT_CODE,
+            id: p.PRODUCT_ID,
             name: p.PRODUCT_NAME,
             price: p.SELLING_PRICE,
             groupName: p.PRODUCT_NAME.includes('(SME)') ? 'SME' :
