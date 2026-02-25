@@ -12,6 +12,7 @@ import { motion } from 'framer-motion';
 import { DashboardData } from '@/app/actions/dashboard';
 import BuyElectricityModal from './modals/BuyElectrictyModal';
 import BuyCableModal from './modals/BuyCableModal';
+import { useRouter } from 'next/navigation';
 
 interface DashboardProps {
   initialData: DashboardData;
@@ -36,6 +37,8 @@ const Dashboard: React.FC<DashboardProps> = ({ initialData }) => {
   const [isBuyAirtimeOpen, setIsBuyAirtimeOpen] = useState(false);
   const [isBuyElectrictyOpen, setIsBuyElectrictyOpen] = useState(false);
   const [isBuyCableTV, setIsBuyCableTV] = useState(false);
+
+  const router = useRouter();
 
   // Modernized Quick Actions: Light backgrounds with colored icons
   const quickActions = [
@@ -100,7 +103,7 @@ const Dashboard: React.FC<DashboardProps> = ({ initialData }) => {
 
         {/* Action Footer */}
         <div className="relative z-10 pt-2 border-t border-white/10">
-          <button className="bg-white text-gray-900 px-5 py-3 rounded-full text-sm font-bold flex items-center justify-center gap-2 w-full sm:w-auto hover:bg-gray-50 active:scale-95 transition-all shadow-md">
+          <button onClick={() => router.push('/user/profile')} className="bg-white text-gray-900 px-5 py-3 rounded-full text-sm font-bold flex items-center justify-center gap-2 w-full sm:w-auto hover:bg-gray-50 active:scale-95 transition-all shadow-md">
             <Plus size={18} strokeWidth={3} className="text-primary" />
             Fund Wallet
           </button>
