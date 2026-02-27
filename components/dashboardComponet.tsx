@@ -87,7 +87,7 @@ const Dashboard: React.FC<DashboardProps> = ({ initialData }) => {
               </button>
             </div>
             <div className="text-4xl sm:text-5xl font-extrabold tracking-tight">
-              {showBalance ? `${CURRENCY}${data.user.walletBalance.toLocaleString()}` : '****'}
+              {showBalance ? `${CURRENCY}${Number(data.user.walletBalance).toLocaleString()}` : '****'}
             </div>
           </div>
 
@@ -96,7 +96,7 @@ const Dashboard: React.FC<DashboardProps> = ({ initialData }) => {
             <span className="text-[10px] text-blue-100 uppercase tracking-wider block mb-0.5">Today Spent</span>
             <div className="flex items-center justify-end gap-1">
               <TrendingUp size={12} className="text-white" />
-              <span className="font-bold text-sm text-white">{CURRENCY}{data.todaySpent.toLocaleString()}</span>
+              <span className="font-bold text-sm text-white">{CURRENCY}{Number(data.todaySpent).toLocaleString()}</span>
             </div>
           </div>
         </div>

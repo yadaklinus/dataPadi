@@ -57,7 +57,7 @@ export interface NetworkGroup {
 
 export interface NetworkPlans {
   // Key names from your response: "MTN", "Glo", "m_9mobile", "Airtel"
-  [network: string]: NetworkGroup[]; 
+  [network: string]: NetworkGroup[];
 }
 
 export async function getDataPlans() {
@@ -84,13 +84,14 @@ export async function buyData(network: string, planId: string, phoneNumber: stri
       method: 'POST',
       body: JSON.stringify({ network, planId, phoneNumber }), // [cite: 168, 169]
     });
-    
+
     const result = await response.json();
-    return { 
-      success: response.ok, 
+
+    return {
+      success: response.ok,
       message: result.message, // [cite: 179]
       transactionId: result.transactionId, // [cite: 180]
-      error: !response.ok ? result.message : undefined 
+      error: !response.ok ? result.message : undefined
     };
   } catch (error) {
     return { success: false, error: 'Transaction failed due to network error' };
@@ -105,7 +106,7 @@ export async function getDataTransactionStatus(reference: string): Promise<VtuRe
   try {
     const response = await authorizedFetch(`/api/v1/vtu/data/${reference}`); // [cite: 186, 188]
     const result = await response.json();
-    
+
     return { success: response.ok, data: result.data, error: result.message }; // [cite: 192]
   } catch (error) {
     return { success: false, error: 'Failed to fetch status' };
@@ -125,13 +126,13 @@ export async function buyAirtime(network: string, amount: number, phoneNumber: s
       method: 'POST',
       body: JSON.stringify({ network, amount, phoneNumber }), // [cite: 196]
     });
-    
+
     const result = await response.json();
-    return { 
-      success: response.ok, 
-      message: result.message, 
+    return {
+      success: response.ok,
+      message: result.message,
       transactionId: result.transactionId, // [cite: 204]
-      error: !response.ok ? result.message : undefined 
+      error: !response.ok ? result.message : undefined
     };
   } catch (error) {
     return { success: false, error: 'Transaction failed due to network error' };
@@ -146,7 +147,7 @@ export async function getAirtimeTransactionStatus(reference: string): Promise<Vt
   try {
     const response = await authorizedFetch(`/api/v1/vtu/airtime/${reference}`); // [cite: 210]
     const result = await response.json();
-    
+
     return { success: response.ok, data: result.data, error: result.message };
   } catch (error) {
     return { success: false, error: 'Failed to fetch status' };
@@ -166,12 +167,12 @@ export async function printRechargePins(network: string, value: string, quantity
       method: 'POST',
       body: JSON.stringify({ network, value, quantity }), // 
     });
-    
+
     const result = await response.json();
-    return { 
-      success: response.ok, 
-      message: result.message, 
-      error: !response.ok ? result.message : undefined 
+    return {
+      success: response.ok,
+      message: result.message,
+      error: !response.ok ? result.message : undefined
     };
   } catch (error) {
     return { success: false, error: 'Failed to connect to printer service' };
@@ -185,8 +186,8 @@ export async function getPrintInventory() {
 
     if (!response.ok) return { success: false, error: result.message };
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       data: result.data // [cite: 121]
     };
   } catch (error) {
@@ -200,11 +201,11 @@ export async function getPrintOrderPins(reference: string) {
   try {
     const response = await authorizedFetch(`/api/v1/vtu/print/${reference}`); // [cite: 231]
     const result = await response.json();
-    
+
     if (!response.ok) return { success: false, error: result.message || 'Failed to fetch PINs' };
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       data: result.data as {
         orderId: string; // [cite: 130]
         date: string; // [cite: 131]

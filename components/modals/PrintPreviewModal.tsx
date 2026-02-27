@@ -5,7 +5,7 @@ import Button from '../ui/Button';
 import { PrintBatch, NetworkId } from '@/types/types';
 import { CURRENCY } from '@/constants';
 import { Printer, AlertCircle, LayoutGrid, Download, FileDown } from 'lucide-react';
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 import { toPng } from 'html-to-image';
 
 interface PrintPreviewModalProps {
@@ -46,8 +46,10 @@ const PrintPreviewModal: React.FC<PrintPreviewModalProps> = ({ isOpen, onClose, 
         pixelRatio: 2, // Higher scale for better quality
         backgroundColor: '#ffffff',
         style: {
-          display: 'block', // Overrides the @media screen { display: none }
+          display: 'block',
           position: 'relative',
+          left: '0',
+          top: '0',
         }
       });
 
@@ -125,102 +127,100 @@ const PrintPreviewModal: React.FC<PrintPreviewModalProps> = ({ isOpen, onClose, 
             background: #ffffff !important;
             z-index: 9999;
           }
-          .print-header-main {
-             text-align: center;
-             margin-bottom: 4px;
-             border-bottom: 1px solid #333333 !important;
-             padding-bottom: 4px;
-          }
-          .print-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 1mm;
-            padding: 0;
-          }
-          .print-card {
-            border: 0.5px solid #cccccc !important;
-            padding: 8px;
-            font-family: 'Inter', sans-serif;
-            page-break-inside: avoid;
-            background: #ffffff !important;
-            display: flex;
-            flex-direction: column;
-            border-radius: 4px;
-            color: #333333 !important;
-            height: 24mm;
-            overflow: hidden;
-          }
-          .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2px;
-          }
-          .card-brand {
-            font-size: 8px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            color: #333333 !important;
-          }
-          .card-network-badge {
-            font-size: 8px;
-            font-weight: 900;
-            text-transform: uppercase;
-            background: #000000 !important;
-            color: #ffffff !important;
-            padding: 1px 3px;
-            border-radius: 2px;
-          }
-          .card-amount {
-            font-size: 11px;
-            font-weight: 900;
-            border: 1px solid #000000 !important;
-            padding: 1px 3px;
-            border-radius: 3px;
-          }
-          .card-body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 2px 0;
-            background: #fdfdfd !important;
-            border-radius: 4px;
-            margin: 0;
-          }
-          .pin-label {
-            font-size: 6.5px;
-            font-weight: bold;
-            text-transform: uppercase;
-            color: #666;
-            margin-bottom: 0px;
-          }
-          .pin-value {
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 15px;
-            font-weight: 900;
-            letter-spacing: 0.5px;
-            color: #000;
-          }
-          .card-footer {
-            font-size: 6px;
-            color: #333;
-            margin-top: 0;
-          }
-          .footer-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0px;
-          }
-          .ussd-box {
-            font-weight: bold;
-            color: #000;
-          }
         }
         @media screen {
           #printable-area {
-            display: none;
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            width: 210mm; /* A4 width */
+            background: white;
+            color: black;
           }
+        }
+
+        #printable-area {
+          font-family: Arial, sans-serif;
+          padding: 20px;
+          box-sizing: border-box;
+        }
+        #printable-area .header {
+          text-align: center;
+          margin-bottom: 10px;
+          border-bottom: 1px solid #333;
+          padding-bottom: 5px;
+        }
+        #printable-area .header h1 {
+          font-size: 22px;
+          font-weight: 900;
+          margin: 0;
+          letter-spacing: 2px;
+        }
+        #printable-area .header p {
+          margin: 4px 0;
+          font-size: 10px;
+          color: #555;
+        }
+        #printable-area .grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 3mm;
+        }
+        #printable-area .card {
+          border: 0.5pt solid #ccc;
+          padding: 6px;
+          border-radius: 4px;
+          display: flex;
+          flex-direction: column;
+          height: 24mm;
+          page-break-inside: avoid;
+          background: #ffffff;
+          box-sizing: border-box;
+        }
+        #printable-area .card-header {
+          display: flex;
+          justify-content: space-between;
+          font-size: 8px;
+          font-weight: 800;
+        }
+        #printable-area .amount {
+          border: 1px solid #000;
+          padding: 1px 4px;
+          font-weight: 900;
+        }
+        #printable-area .card-body {
+          flex: 1;
+          text-align: center;
+          background: #fafafa;
+          border-radius: 4px;
+          margin: 3px 0;
+          padding: 3px 0;
+        }
+        #printable-area .network {
+          font-size: 8px;
+          font-weight: 900;
+          background: #000;
+          color: #fff;
+          padding: 2px 4px;
+          border-radius: 2px;
+          display: inline-block;
+          margin-bottom: 2px;
+        }
+        #printable-area .pin-label {
+          font-size: 7px;
+          font-weight: bold;
+          color: #666;
+        }
+        #printable-area .pin-value {
+          font-family: monospace;
+          font-size: 14px;
+          font-weight: 900;
+          letter-spacing: 0.5px;
+        }
+        #printable-area .footer {
+          font-size: 6.5px;
+          display: flex;
+          justify-content: space-between;
         }
       `}</style>
 
@@ -304,48 +304,29 @@ const PrintPreviewModal: React.FC<PrintPreviewModalProps> = ({ isOpen, onClose, 
       {/* Portal Printable Area to body */}
       {createPortal(
         <div id="printable-area">
-          <div className="print-header-main">
-            <h1 style={{ fontSize: '22px', fontWeight: '900', margin: 0, textTransform: 'uppercase', letterSpacing: '2px' }}>DATAPADI</h1>
-            <p style={{ fontSize: '11px', margin: '4px 0', fontWeight: 'bold', color: '#666' }}>Automated Recharge Voucher System</p>
-            <p style={{ fontSize: '9px', margin: 0 }}>Multi-Batch Run • Total Vouchers: {allPins.length} • Printed: {new Date().toLocaleDateString()}</p>
+          <div className="header">
+            <h1>DATAPADI</h1>
+            <p>Automated Recharge Voucher System</p>
+            <p>Multi-Batch Run • Total Vouchers: {allPins.length} • Printed: {new Date().toLocaleDateString()}</p>
           </div>
 
-          <div className="print-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1mm', background: '#ffffff' }}>
+          <div className="grid">
             {allPins.map((pin, idx) => (
-              <div
-                key={`${pin.batchId}-${idx}`}
-                className="print-card"
-                style={{
-                  border: '0.5pt solid #cccccc',
-                  padding: '4px 6px',
-                  background: '#ffffff',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: '24mm',
-                  borderRadius: '4px',
-                  color: '#000000'
-                }}
-              >
-                <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1px' }}>
-                  <span style={{ fontSize: '7px', fontWeight: '800', color: '#333333' }}>DATAPADI</span>
-                  <span style={{ fontSize: '11px', fontWeight: '900', border: '1px solid #000000', padding: '1px 3px', borderRadius: '3px' }}>{CURRENCY}{pin.amount}</span>
+              <div key={`${pin.batchId}-${idx}`} className="card">
+                <div className="card-header">
+                  <span>DATAPADI</span>
+                  <span className="amount">{CURRENCY}{pin.amount}</span>
                 </div>
 
-                <div className="card-body" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fafafa', borderRadius: '4px', margin: '1px 0', flex: 1 }}>
-                  <span style={{ fontSize: '8px', fontWeight: '900', background: '#000000', color: '#ffffff', padding: '1px 3px', borderRadius: '2px', textTransform: 'uppercase', marginBottom: '2px' }}>{pin.networkId}</span>
-                  <span style={{ fontSize: '6px', fontWeight: '700', color: '#666666', textTransform: 'uppercase' }}>Recharge PIN</span>
-                  <span style={{ fontFamily: 'monospace', fontSize: '15px', fontWeight: '900', letterSpacing: '0.5px', color: '#000000' }}>{formatPin(pin.pin)}</span>
+                <div className="card-body">
+                  <div className="network">{pin.networkId}</div>
+                  <div className="pin-label">Recharge PIN</div>
+                  <div className="pin-value">{pin.pin ? formatPin(pin.pin) : 'N/A'}</div>
                 </div>
 
-                <div className="card-footer" style={{ fontSize: '6.5px', color: '#333333' }}>
-                  <div className="footer-row" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>SN: <strong>{pin.serial}</strong></span>
-                    <span>Load: <strong style={{ fontWeight: 'bold', color: '#000000' }}>{getUSSD(pin.networkId)}</strong></span>
-                  </div>
-                  <div className="footer-row" style={{ display: 'flex', justifyContent: 'space-between', opacity: 0.6 }}>
-                    <span>Valid for 12 months</span>
-                    <span>Powered by DataPadi</span>
-                  </div>
+                <div className="footer">
+                  <span>SN: {pin.serial}</span>
+                  <span>Load: {getUSSD(pin.networkId)}</span>
                 </div>
               </div>
             ))}

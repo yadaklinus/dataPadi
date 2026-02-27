@@ -23,8 +23,10 @@ export interface DashboardData {
 export async function getDashboardData() {
   try {
     const response = await authorizedFetch('/api/v1/user/dashboard');
-    
+
     const result = await response.json();
+
+
 
     if (!response.ok) {
       return { success: false, error: result.message || 'Failed to fetch dashboard' };

@@ -38,7 +38,8 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({ isOpe
     };
 
     const renderDetails = () => {
-        const details = transaction.details;
+        const details = transaction.metadata;
+        console.log(details)
         const type = transaction.type as any; // Cast for raw API types
 
         if (!details && type !== 'FLIGHT') return <p className="text-gray-500 text-center">No additional details available.</p>;
@@ -51,6 +52,7 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({ isOpe
                         <DetailRow label="Meter Type" value={details?.meterType} />
                         <DetailRow label="Meter Number" value={details?.meterNumber} />
                         <DetailRow label="Customer Name" value={details?.customerName} />
+                        <DetailRow label="Address" value={details?.address} />
                         {details?.token && (
                             <div className="mt-4 p-4 bg-amber-50 border border-amber-100 rounded-xl text-center">
                                 <p className="text-xs text-amber-600 uppercase font-bold tracking-wider mb-1">Token</p>

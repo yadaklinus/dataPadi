@@ -72,6 +72,7 @@ export interface Transaction {
   description: string;
   reference?: string;
   details?: any;
+  metadata: any;
 }
 
 export interface Pin {

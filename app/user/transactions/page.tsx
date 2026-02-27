@@ -43,6 +43,8 @@ const History: React.FC = () => {
 
     const result = await getTransactionHistory(1, 50, apiType);
 
+    //console.log(result)
+
     if (result.success) {
       setTransactions(result.data.map((tx: any) => ({
         ...tx,
@@ -56,6 +58,7 @@ const History: React.FC = () => {
   };
 
   const handleTransactionClick = (tx: Transaction) => {
+    console.log(tx)
     setSelectedTransaction(tx);
     setIsModalOpen(true);
   };
