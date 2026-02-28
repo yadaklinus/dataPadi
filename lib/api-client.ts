@@ -11,6 +11,7 @@ export async function authorizedFetch(endpoint: string, options: RequestInit = {
 
   const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
+
   const getHeaders = (token: string | undefined) => ({
     'Content-Type': 'application/json',
     ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
