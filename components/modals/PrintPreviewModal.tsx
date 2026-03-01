@@ -72,7 +72,7 @@ const PrintPreviewModal: React.FC<PrintPreviewModalProps> = ({ isOpen, onClose, 
         heightLeft -= pageHeight;
       }
 
-      pdf.save(`DataPadi_Vouchers_${new Date().toISOString().split('T')[0]}.pdf`);
+      pdf.save(`MuftiPay_Vouchers_${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (error) {
       console.error('PDF Generation Error:', error);
     } finally {
@@ -255,7 +255,7 @@ const PrintPreviewModal: React.FC<PrintPreviewModalProps> = ({ isOpen, onClose, 
               {allPins.slice(0, 6).map((pin, i) => (
                 <div key={i} className="bg-white p-3 text-center border border-gray-300 rounded-xl shadow-sm">
                   <div className="flex justify-between items-center text-[8px] font-black mb-2 pb-1 border-b border-gray-50">
-                    <span className="text-primary">DATAPADI</span>
+                    <span className="text-primary">MUFTIPAY</span>
                     <span className="bg-gray-900 text-white px-1.5 py-0.5 rounded-sm">{pin.networkId}</span>
                   </div>
                   <div className="text-[7px] text-gray-400 font-bold uppercase mb-0.5">Voucher PIN</div>
@@ -305,7 +305,7 @@ const PrintPreviewModal: React.FC<PrintPreviewModalProps> = ({ isOpen, onClose, 
       {createPortal(
         <div id="printable-area">
           <div className="header">
-            <h1>DATAPADI</h1>
+            <h1>MUFTIPAY</h1>
             <p>Automated Recharge Voucher System</p>
             <p>Multi-Batch Run • Total Vouchers: {allPins.length} • Printed: {new Date().toLocaleDateString()}</p>
           </div>
@@ -314,7 +314,7 @@ const PrintPreviewModal: React.FC<PrintPreviewModalProps> = ({ isOpen, onClose, 
             {allPins.map((pin, idx) => (
               <div key={`${pin.batchId}-${idx}`} className="card">
                 <div className="card-header">
-                  <span>DATAPADI</span>
+                  <span>MUFTIPAY</span>
                   <span className="amount">{CURRENCY}{pin.amount}</span>
                 </div>
 

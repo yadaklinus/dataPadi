@@ -52,4 +52,4 @@ After modifying the `.npmrc` file, you need to run `pnpm install` again to ensur
 
 Licensed under the [MIT license](https://github.com/heroui-inc/next-app-template/blob/main/LICENSE).
 "# gakko-learn" 
-"# dataPadi" 
+# Mufti Pay

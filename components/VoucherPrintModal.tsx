@@ -66,7 +66,7 @@ export const VoucherPrintModal = ({ pinsToPrint, onClose }: { pinsToPrint: any[]
         heightLeft -= pageHeight;
       }
 
-      pdf.save(`DataPadi_Vouchers_${new Date().toISOString().split('T')[0]}.pdf`);
+      pdf.save(`MuftiPay_Vouchers_${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (error) {
       console.error('PDF Export Error:', error);
     } finally {
@@ -204,7 +204,7 @@ export const VoucherPrintModal = ({ pinsToPrint, onClose }: { pinsToPrint: any[]
                         {CURRENCY}{pin.denomination}
                       </span>
                     </div>
-                    <span style={{ fontSize: '5px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase' }}>DataPadi</span>
+                    <span style={{ fontSize: '5px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase' }}>MuftiPay</span>
                   </div>
 
                   {/* 2. PIN Section */}

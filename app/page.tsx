@@ -64,7 +64,7 @@ export default function LandingPage() {
             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-600/30 group-hover:scale-105 transition-transform">
               <Zap size={22} fill="currentColor" />
             </div>
-            <span className="font-black text-2xl tracking-tight text-slate-900">DataPadi</span>
+            <span className="font-black text-2xl tracking-tight text-slate-900">Mufti Pay</span>
           </Link>
 
           <nav className="hidden lg:flex gap-10 text-sm font-bold text-slate-500 uppercase tracking-widest">
@@ -357,7 +357,7 @@ export default function LandingPage() {
                 Sign In Instead
               </Link>
             </div>
-            <p className="mt-12 text-blue-100 font-medium">Join 50,000+ users who trust DataPadi daily.</p>
+            <p className="mt-12 text-blue-100 font-medium">Join 50,000+ users who trust Mufti Pay daily.</p>
           </div>
         </section>
 
@@ -370,10 +370,10 @@ export default function LandingPage() {
             <div className="col-span-2 lg:col-span-2">
               <Link href="/" className="flex items-center gap-2 mb-8">
                 <Zap size={28} className="text-blue-500 fill-blue-500" />
-                <span className="font-black text-2xl tracking-tight">DataPadi</span>
+                <span className="font-black text-2xl tracking-tight">Mufti Pay</span>
               </Link>
               <p className="text-slate-400 font-medium max-w-sm leading-relaxed mb-8">
-                DataPadi is Nigeria's leading automated airtime, data and utility payment platform. We empower individuals and businesses with fast digital solutions.
+                Mufti Pay is Nigeria's leading automated airtime, data and utility payment platform. We empower individuals and businesses with fast digital solutions.
               </p>
               <div className="flex gap-4">
                 {/* Social placeholders */}
@@ -417,7 +417,7 @@ export default function LandingPage() {
           </div>
 
           <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6 text-slate-500 text-sm font-bold">
-            <p>© {new Date().getFullYear()} DataPadi Inc. Made for Nigeria. 🇳🇬</p>
+            <p>© {new Date().getFullYear()} Mufti Pay Inc. Made for Nigeria. 🇳🇬</p>
             <div className="flex gap-8">
               <span>Secure by Cloudflare</span>
               <span>Encrypted SSL</span>

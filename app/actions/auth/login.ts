@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 
 /**
  * Server Action for user authentication
- * Based on DataPadi API Documentation Section 2.2
+ * Based on Mufti Pay API Documentation Section 2.2
  */
 export async function loginUser(formData: FormData) {
   const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL;

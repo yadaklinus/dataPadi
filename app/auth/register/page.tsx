@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { User, Mail, Phone, Lock, Eye, EyeOff, AlertCircle, CheckCircle2, Zap, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { registerUser } from '@/app/actions/auth/regiter';
+import { registerUser } from '@/app/actions/auth/register';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 
@@ -57,7 +57,7 @@ export default function Register() {
             <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-600/30 group-hover:scale-105 transition-transform">
               <Zap size={26} fill="currentColor" />
             </div>
-            <span className="font-black text-2xl tracking-tight text-slate-900">DataPadi</span>
+            <span className="font-black text-2xl tracking-tight text-slate-900">Mufti Pay</span>
           </Link>
           <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">Create an Account</h1>
           <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Fast, Secure & Automated</p>

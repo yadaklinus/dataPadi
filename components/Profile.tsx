@@ -134,7 +134,7 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
               <div className="flex items-center justify-between bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
                 <div>
                   <h3 className="text-2xl font-mono font-bold tracking-wider mb-1">{initialUser.kycData.virtualAccountNumber}</h3>
-                  <p className="text-xs text-blue-200 font-medium">{initialUser.kycData.bankName} • DATA PADI {initialUser.fullName}</p>
+                  <p className="text-xs text-blue-200 font-medium">{initialUser.kycData.bankName} • MUFTI PAY {initialUser.fullName}</p>
                 </div>
                 <button
                   onClick={handleCopyAccount}

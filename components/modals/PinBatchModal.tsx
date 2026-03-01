@@ -206,7 +206,7 @@ const PinBatchModal: React.FC<PinBatchModalProps> = ({ isOpen, onClose, batch })
                 >
                   {/* Decorative Card Header */}
                   <div className="flex justify-between items-center mb-3">
-                    <span className="text-[10px] font-black text-primary tracking-tighter uppercase">DataPadi Voucher</span>
+                    <span className="text-[10px] font-black text-primary tracking-tighter uppercase">MuftiPay Voucher</span>
                     <span className="text-xs font-bold px-2 py-0.5 bg-gray-100 rounded text-gray-600">SN: {pin.serial}</span>
                   </div>
 
@@ -253,7 +253,7 @@ const PinBatchModal: React.FC<PinBatchModalProps> = ({ isOpen, onClose, batch })
       {createPortal(
         <div id="printable-area">
           <div className="header">
-            <h1>DATAPADI</h1>
+            <h1>MUFTIPAY</h1>
             <p>Automated Recharge Voucher System</p>
             <p>Batch ID: {batch.id} • Date: {new Date().toLocaleDateString()}</p>
           </div>
@@ -262,7 +262,7 @@ const PinBatchModal: React.FC<PinBatchModalProps> = ({ isOpen, onClose, batch })
             {batch.pins.map((pin, idx) => (
               <div key={`${batch.id}-${idx}`} className="card">
                 <div className="card-header">
-                  <span>DATAPADI</span>
+                  <span>MUFTIPAY</span>
                   <span className="amount">{CURRENCY}{batch.amount}</span>
                 </div>
 

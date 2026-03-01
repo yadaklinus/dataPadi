@@ -59,7 +59,7 @@ const Login = () => {
             <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-600/30 group-hover:scale-105 transition-transform">
               <Zap size={26} fill="currentColor" />
             </div>
-            <span className="font-black text-2xl tracking-tight text-slate-900">DataPadi</span>
+            <span className="font-black text-2xl tracking-tight text-slate-900">Mufti Pay</span>
           </Link>
           <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-3">Welcome Back</h1>
           <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Sign in to your account</p>
@@ -111,7 +111,7 @@ const Login = () => {
                 className="[&>input]:rounded-2xl"
               />
               <div className="flex justify-end pt-1">
-                <Link href="/forgot-password" title="Coming Soon" className="text-xs text-blue-600 font-black tracking-wide hover:underline uppercase">
+                <Link href="/auth/forgot-password" className="text-xs text-blue-600 font-black tracking-wide hover:underline uppercase">
                   Forgot Password?
                 </Link>
               </div>
@@ -129,7 +129,7 @@ const Login = () => {
 
           <div className="mt-12 pt-8 border-t border-slate-50 text-center">
             <p className="text-slate-500 font-medium">
-              New to DataPadi?{' '}
+              New to Mufti Pay?{' '}
               <Link href="/auth/register" className="text-blue-600 font-black hover:underline px-1">
                 Create an account
               </Link>

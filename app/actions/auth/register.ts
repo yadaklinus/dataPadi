@@ -23,14 +23,14 @@ export async function registerUser(formData: FormData) {
 
     const data = await response.json();
 
-    // Handle standard Data Padi errors (400, 409)
+    // Handle standard Mufti Pay errors (400, 409)
     if (!response.ok) {
       return { success: false, error: data.message || 'Registration failed' };
     }
 
     // Handle success (201)
     return { success: true, message: data.message };
-    
+
   } catch (error) {
     console.error('Registration error:', error);
     return { success: false, error: 'Failed to connect to the server. Please try again later.' };

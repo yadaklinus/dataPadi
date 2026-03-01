@@ -295,14 +295,40 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
                       />
                     </div>
 
+                    <div className="pt-2 mb-4 shrink-0">
+                      <Input
+                        label="Contact Phone Number"
+                        placeholder="Required for receipt"
+                        type="tel"
+                        maxLength={11}
+                        value={phoneNumber}
+                        onChange={(e) => {
+                          setPhoneNumber(e.target.value.replace(/\D/g, ''));
+                          setErrorMessage('');
+                        }}
+                        leftIcon={<Phone size={18} className="text-gray-400" />}
+                      />
+                    </div>
+
+                    <div className="pt-2 mb-4 shrink-0">
+                      <Button
+                        fullWidth
+                        disabled={!selectedPlan || phoneNumber.length < 10}
+                        onClick={() => setStep('CONFIRM')}
+                        className="h-14 text-base rounded-2xl shadow-md bg-purple-600 hover:bg-purple-700 text-white"
+                      >
+                        Proceed to Payment
+                      </Button>
+                    </div>
+
                     <div className="space-y-3 flex-1 overflow-y-auto no-scrollbar pb-2">
                       {filteredPlans.length > 0 ? filteredPlans.map((plan) => (
                         <div
                           key={plan.id}
                           onClick={() => setSelectedPlan(plan)}
                           className={`flex justify-between items-center p-4 rounded-xl border transition-all cursor-pointer shadow-sm ${selectedPlan?.id === plan.id
-                              ? 'border-purple-600 bg-purple-50 ring-1 ring-purple-600'
-                              : 'border-gray-100 bg-white hover:border-purple-300'
+                            ? 'border-purple-600 bg-purple-50 ring-1 ring-purple-600'
+                            : 'border-gray-100 bg-white hover:border-purple-300'
                             }`}
                         >
                           <span className="font-semibold text-gray-800">{plan.name}</span>
@@ -316,37 +342,11 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
                     </div>
                   </div>
 
-                  <div className="pt-2 shrink-0">
-                    <Input
-                      label="Contact Phone Number"
-                      placeholder="Required for receipt"
-                      type="tel"
-                      maxLength={11}
-                      value={phoneNumber}
-                      onChange={(e) => {
-                        setPhoneNumber(e.target.value.replace(/\D/g, ''));
-                        setErrorMessage('');
-                      }}
-                      leftIcon={<Phone size={18} className="text-gray-400" />}
-                    />
-                  </div>
+
                 </motion.div>
               )}
             </div>
 
-            {/* Anchored Bottom Action for Proceed */}
-            {isValidated && (
-              <div className="mt-auto pt-4 shrink-0">
-                <Button
-                  fullWidth
-                  disabled={!selectedPlan || phoneNumber.length < 10}
-                  onClick={() => setStep('CONFIRM')}
-                  className="h-14 text-base rounded-2xl shadow-md bg-purple-600 hover:bg-purple-700 text-white"
-                >
-                  Proceed to Payment
-                </Button>
-              </div>
-            )}
           </motion.div>
         )}
 

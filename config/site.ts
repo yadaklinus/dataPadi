@@ -1,7 +1,7 @@
 export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
-  name: "Data Padi",
+  name: "Mufti Pay",
   description: "A mobile-first VTU and recharge card printing application featuring a modern, minimalistic design and smooth interactions.",
   navItems: [
     {
@@ -32,7 +32,7 @@ export const siteConfig = {
     },
     {
       label: "Help & Feedback",
-      href: "mailto:support@datapadi.com",
+      href: "mailto:support@muftipay.com",
     },
     {
       label: "Logout",
@@ -40,7 +40,7 @@ export const siteConfig = {
     },
   ],
   links: {
-    github: "https://datapadi.com",
-    twitter: "https://x.com/datapadi",
+    github: "https://muftipay.com",
+    twitter: "https://x.com/muftipay",
   },
 };

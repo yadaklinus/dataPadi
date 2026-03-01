@@ -2,8 +2,11 @@
 import React from 'react';
 import { Transaction, TransactionType, TransactionStatus } from '@/types/types';
 import BottomSheet from './BottomSheet';
-import { CheckCircle, XCircle, Clock, Copy, Share2 } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Copy, Share2, Zap, Download } from 'lucide-react';
 import { CURRENCY } from '@/constants';
+import { jsPDF } from 'jspdf';
+import { toPng } from 'html-to-image';
+import { createPortal } from 'react-dom';
 import Button from '../ui/Button';
 
 interface TransactionDetailsModalProps {
@@ -33,8 +36,41 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({ isOpe
         }
     };
 
+    const [isExporting, setIsExporting] = React.useState(false);
+
     const copyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
+    };
+
+    const handleDownloadPDF = async () => {
+        const printableArea = document.getElementById('receipt-printable-area');
+        if (!printableArea) return;
+
+        try {
+            setIsExporting(true);
+            const imgData = await toPng(printableArea, {
+                pixelRatio: 2,
+                backgroundColor: '#ffffff',
+                style: {
+                    display: 'block',
+                    position: 'relative',
+                    left: '0',
+                    top: '0',
+                }
+            });
+
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgProps = pdf.getImageProperties(imgData);
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`MuftiPay_Receipt_${transaction.reference || transaction.id}.pdf`);
+        } catch (error) {
+            console.error('PDF Generation Error:', error);
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     const renderDetails = () => {
@@ -209,13 +245,122 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({ isOpe
             </div>
 
             <div className="flex gap-3">
-                <Button variant="outline" className="flex-1 flex items-center justify-center gap-2">
-                    <Share2 size={18} /> Share Receipt
+                <Button
+                    variant="outline"
+                    className="flex-1 flex items-center justify-center gap-2"
+                    onClick={handleDownloadPDF}
+                    isLoading={isExporting}
+                >
+                    <Download size={18} /> Save PDF
                 </Button>
                 <Button onClick={onClose} className="flex-1" fullWidth={false}>
                     Close
                 </Button>
             </div>
+
+            {/* Hidden Printable Receipt Template */}
+            {createPortal(
+                <div id="receipt-printable-area" style={{
+                    position: 'absolute',
+                    left: '-9999px',
+                    top: '-9999px',
+                    width: '400px',
+                    padding: '40px',
+                    background: 'white',
+                    fontFamily: 'Arial, sans-serif'
+                }}>
+                    <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                        <div style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            marginBottom: '10px'
+                        }}>
+                            <div style={{
+                                background: '#2563eb',
+                                color: 'white',
+                                padding: '8px',
+                                borderRadius: '12px',
+                                display: 'flex'
+                            }}>
+                                <Zap size={24} fill="white" />
+                            </div>
+                            <span style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a' }}>Mufti Pay</span>
+                        </div>
+                        <p style={{ color: '#64748b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px', margin: 0 }}>Transaction Receipt</p>
+                    </div>
+
+                    <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                        <h2 style={{ fontSize: '36px', fontWeight: '900', color: '#0f172a', margin: '0 0 10px 0' }}>
+                            {CURRENCY}{Number(transaction.amount).toLocaleString()}
+                        </h2>
+                        <span style={{
+                            padding: '6px 16px',
+                            borderRadius: '100px',
+                            fontSize: '12px',
+                            fontWeight: '800',
+                            textTransform: 'uppercase',
+                            background: transaction.status === TransactionStatus.SUCCESS ? '#f0fdf4' : '#fef2f2',
+                            color: transaction.status === TransactionStatus.SUCCESS ? '#166534' : '#991b1b',
+                            border: `1px solid ${transaction.status === TransactionStatus.SUCCESS ? '#dcfce7' : '#fee2e2'}`
+                        }}>
+                            {transaction.status}
+                        </span>
+                    </div>
+
+                    <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '20px', marginBottom: '30px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                            <span style={{ color: '#64748b', fontSize: '13px' }}>Reference</span>
+                            <span style={{ color: '#0f172a', fontSize: '13px', fontWeight: '600' }}>{transaction.reference || transaction.id}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                            <span style={{ color: '#64748b', fontSize: '13px' }}>Transaction Type</span>
+                            <span style={{ color: '#0f172a', fontSize: '13px', fontWeight: '600' }}>{transaction.type}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                            <span style={{ color: '#64748b', fontSize: '13px' }}>Date</span>
+                            <span style={{ color: '#0f172a', fontSize: '13px', fontWeight: '600' }}>{new Date(transaction.date || (transaction as any).createdAt).toLocaleString()}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                            <span style={{ color: '#64748b', fontSize: '13px' }}>Description</span>
+                            <span style={{ color: '#0f172a', fontSize: '13px', fontWeight: '600', textAlign: 'right', maxWidth: '60%' }}>{transaction.description}</span>
+                        </div>
+                    </div>
+
+                    <div style={{
+                        background: '#f8fafc',
+                        borderRadius: '20px',
+                        padding: '20px',
+                        marginBottom: '30px'
+                    }}>
+                        <p style={{
+                            fontSize: '10px',
+                            fontWeight: '900',
+                            color: '#94a3b8',
+                            textTransform: 'uppercase',
+                            letterSpacing: '1px',
+                            marginBottom: '15px',
+                            marginTop: 0
+                        }}>Details</p>
+
+                        {transaction.metadata && Object.entries(transaction.metadata).map(([key, value]) => {
+                            if (!value || typeof value === 'object') return null;
+                            return (
+                                <div key={key} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                    <span style={{ color: '#64748b', fontSize: '12px' }}>{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+                                    <span style={{ color: '#0f172a', fontSize: '12px', fontWeight: '600' }}>{String(value)}</span>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    <div style={{ textAlign: 'center', marginTop: '40px' }}>
+                        <p style={{ color: '#94a3b8', fontSize: '11px', margin: 0 }}>Thank you for using Mufti Pay.</p>
+                        <p style={{ color: '#cbd5e1', fontSize: '10px', margin: '5px 0 0 0' }}>This is an automated receipt.</p>
+                    </div>
+                </div>,
+                document.body
+            )}
         </BottomSheet>
     );
 };
