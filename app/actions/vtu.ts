@@ -127,6 +127,8 @@ export async function buyAirtime(network: string, amount: number, phoneNumber: s
       body: JSON.stringify({ network, amount, phoneNumber }), // [cite: 196]
     });
 
+
+
     const result = await response.json();
     return {
       success: response.ok,
@@ -221,3 +223,58 @@ export async function getPrintOrderPins(reference: string) {
   }
 }
 
+// --- 4. EDUCATION ROUTES (JAMB/WAEC) ---
+
+export async function verifyJambProfile(profileId: string) {
+  try {
+    const response = await authorizedFetch(`/api/v1/education/verify-jamb?profileId=${profileId}`);
+    const result = await response.json();
+
+    if (!response.ok) return { success: false, error: result.message || 'Invalid JAMB Profile ID.' };
+
+    return {
+      success: true,
+      data: result.data // { customer_name: "JOHN CHUKWUDI DOE" }
+    };
+  } catch (error) {
+    return { success: false, error: 'Network connection failed' };
+  }
+}
+
+export async function buyEducationPin(provider: 'WAEC' | 'JAMB', examType: string, phoneNo: string, profileId?: string) {
+  try {
+    const body: any = { provider, examType, phoneNo };
+    if (provider === 'JAMB' && profileId) {
+      body.profileId = profileId;
+    }
+
+    const response = await authorizedFetch('/api/v1/education/purchase', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+
+    const result = await response.json();
+
+    if (response.status === 202) {
+      return {
+        success: true,
+        status: 'PENDING',
+        message: result.message,
+        transactionId: result.transactionId
+      };
+    }
+
+    if (!response.ok) {
+      return { success: false, error: result.message || 'Transaction failed' };
+    }
+
+    return {
+      success: true,
+      status: 'OK',
+      message: result.message,
+      data: result.data // { cardDetails: "...", transactionId: "..." }
+    };
+  } catch (error) {
+    return { success: false, error: 'Transaction failed due to network error' };
+  }
+}

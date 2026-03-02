@@ -106,25 +106,41 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({ isOpe
             case 'EDUCATION':
                 return (
                     <div className="space-y-3">
-                        <DetailRow label="Exam Body" value={details?.provider} />
-                        <DetailRow label="Plan" value={details?.plan} />
+                        <DetailRow label="Exam Body" value={(() => {
+                            if (details?.examType === 'utme-mock') return 'JAMB UTME (With Mock)';
+                            if (details?.examType === 'utme-no-mock') return 'JAMB UTME (No Mock)';
+                            return details?.provider || 'Education PIN';
+                        })()} />
+                        {details?.customerName && <DetailRow label="Customer Name" value={details.customerName} />}
+                        {details?.plan && <DetailRow label="Plan" value={details.plan} />}
                         <DetailRow label="Quantity" value={details?.quantity} />
+                        {details?.profileId && <DetailRow label="Profile ID" value={details.profileId} />}
+                        <DetailRow label="Phone Number" value={details?.phoneNumber} />
                         {details?.pins && Array.isArray(details.pins) && (
                             <div className="mt-4 space-y-2">
                                 <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2">Purchased PINs</p>
                                 {details.pins.map((pin: any, index: number) => (
                                     <div key={index} className="p-3 bg-teal-50 border border-teal-100 rounded-xl">
                                         <div className="flex justify-between items-center mb-1">
-                                            <span className="text-xs text-teal-600 font-medium">Serial: {pin.serial}</span>
+                                            <span className="text-xs text-teal-600 font-medium">Serial: {pin.serial || pin.Serial}</span>
                                         </div>
                                         <div className="flex justify-between items-center">
-                                            <span className="font-mono font-bold text-gray-800 tracking-wider">{pin.pin}</span>
-                                            <button onClick={() => copyToClipboard(pin.pin)} className="p-1 hover:bg-teal-100 rounded">
+                                            <span className="font-mono font-bold text-gray-800 tracking-wider">{pin.pin || pin.Pin}</span>
+                                            <button onClick={() => copyToClipboard(pin.pin || pin.Pin)} className="p-1 hover:bg-teal-100 rounded">
                                                 <Copy size={14} className="text-teal-600" />
                                             </button>
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+                        )}
+                        {/* Fallback if it's encoded in cardDetails instead */}
+                        {details?.cardDetails && typeof details.cardDetails === 'string' && (
+                            <div className="mt-4 space-y-2">
+                                <p className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-2">PIN Details</p>
+                                <div className="p-3 bg-teal-50 border border-teal-100 rounded-xl">
+                                    <span className="font-mono font-bold text-gray-800 tracking-wider break-all">{details.cardDetails}</span>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -345,13 +361,79 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({ isOpe
 
                         {transaction.metadata && Object.entries(transaction.metadata).map(([key, value]) => {
                             if (!value || typeof value === 'object') return null;
+                            if (key === 'cardDetails' || key === 'pins') return null; // Handled below
+
+                            // Apply friendly display for certain education fields
+                            let displayValue = String(value);
+                            if (key === 'examType') {
+                                if (value === 'utme-mock') displayValue = 'JAMB UTME (With Mock)';
+                                if (value === 'utme-no-mock') displayValue = 'JAMB UTME (No Mock)';
+                            }
+
+                            // Improve label casing e.g. "customerName" -> "Customer Name"
+                            const displayLabel = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+
                             return (
                                 <div key={key} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                                    <span style={{ color: '#64748b', fontSize: '12px' }}>{key.charAt(0).toUpperCase() + key.slice(1)}</span>
-                                    <span style={{ color: '#0f172a', fontSize: '12px', fontWeight: '600' }}>{String(value)}</span>
+                                    <span style={{ color: '#64748b', fontSize: '12px' }}>{displayLabel}</span>
+                                    <span style={{ color: '#0f172a', fontSize: '12px', fontWeight: '600', maxWidth: '60%', textAlign: 'right' }}>{displayValue}</span>
                                 </div>
                             );
                         })}
+
+                        {transaction.metadata?.pins && Array.isArray(transaction.metadata.pins) && transaction.metadata.pins.length > 0 && (
+                            <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
+                                <p style={{
+                                    fontSize: '10px',
+                                    fontWeight: '900',
+                                    color: '#94a3b8',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '1px',
+                                    marginBottom: '15px',
+                                    marginTop: 0
+                                }}>Purchased PINs</p>
+                                {transaction.metadata.pins.map((pin: any, index: number) => (
+                                    <div key={index} style={{
+                                        background: '#fff',
+                                        padding: '12px',
+                                        borderRadius: '12px',
+                                        marginBottom: '10px',
+                                        border: '1px solid #e2e8f0'
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
+                                            <span style={{ color: '#64748b', fontSize: '11px' }}>Serial: {pin.serial || pin.Serial}</span>
+                                        </div>
+                                        <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', letterSpacing: '1px' }}>
+                                            {pin.pin || pin.Pin}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        {transaction.metadata?.cardDetails && typeof transaction.metadata.cardDetails === 'string' && (
+                            <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
+                                <p style={{
+                                    fontSize: '10px',
+                                    fontWeight: '900',
+                                    color: '#94a3b8',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '1px',
+                                    marginBottom: '10px',
+                                    marginTop: 0
+                                }}>PIN Details</p>
+                                <div style={{
+                                    background: '#fff',
+                                    padding: '12px',
+                                    borderRadius: '12px',
+                                    border: '1px solid #e2e8f0',
+                                    fontSize: '14px',
+                                    fontWeight: '600',
+                                    color: '#0f172a'
+                                }}>
+                                    {transaction.metadata.cardDetails}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <div style={{ textAlign: 'center', marginTop: '40px' }}>

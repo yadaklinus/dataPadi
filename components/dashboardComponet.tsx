@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import {
   Eye, EyeOff, Plus, Smartphone, Wifi, Zap, Tv,
-  TrendingUp, CreditCard, Receipt, ChevronRight
+  TrendingUp, CreditCard, Receipt, ChevronRight, GraduationCap
 } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import { CURRENCY } from '@/constants';
@@ -12,6 +12,7 @@ import { motion } from 'framer-motion';
 import { DashboardData } from '@/app/actions/dashboard';
 import BuyElectricityModal from './modals/BuyElectrictyModal';
 import BuyCableModal from './modals/BuyCableModal';
+import BuyEducationModal from './modals/BuyEducationModal';
 import { useRouter } from 'next/navigation';
 
 interface DashboardProps {
@@ -25,6 +26,7 @@ const getIconConfig = (type: string) => {
     case 'AIRTIME': return { icon: Smartphone, bg: 'bg-emerald-50', color: 'text-emerald-600' };
     case 'CABLE_TV': return { icon: Tv, bg: 'bg-purple-50', color: 'text-purple-600' };
     case 'ELECTRICITY': return { icon: Zap, bg: 'bg-amber-50', color: 'text-amber-600' };
+    case 'EDUCATION': return { icon: GraduationCap, bg: 'bg-indigo-50', color: 'text-indigo-600' };
     case 'WALLET_FUNDING': return { icon: CreditCard, bg: 'bg-orange-50', color: 'text-orange-600' };
     default: return { icon: Receipt, bg: 'bg-gray-50', color: 'text-gray-600' };
   }
@@ -37,6 +39,7 @@ const Dashboard: React.FC<DashboardProps> = ({ initialData }) => {
   const [isBuyAirtimeOpen, setIsBuyAirtimeOpen] = useState(false);
   const [isBuyElectrictyOpen, setIsBuyElectrictyOpen] = useState(false);
   const [isBuyCableTV, setIsBuyCableTV] = useState(false);
+  const [isBuyEducationOpen, setIsBuyEducationOpen] = useState(false);
 
   const router = useRouter();
 
@@ -46,6 +49,7 @@ const Dashboard: React.FC<DashboardProps> = ({ initialData }) => {
     { icon: Smartphone, label: 'Airtime', bg: 'bg-emerald-50', color: 'text-emerald-600', onClick: () => setIsBuyAirtimeOpen(true) },
     { icon: Tv, label: 'Cable TV', bg: 'bg-purple-50', color: 'text-purple-600', onClick: () => setIsBuyCableTV(true) },
     { icon: Zap, label: 'Electricity', bg: 'bg-amber-50', color: 'text-amber-600', onClick: () => setIsBuyElectrictyOpen(true) },
+    { icon: GraduationCap, label: 'Education', bg: 'bg-indigo-50', color: 'text-indigo-600', onClick: () => setIsBuyEducationOpen(true) },
   ];
 
   return (
@@ -112,7 +116,7 @@ const Dashboard: React.FC<DashboardProps> = ({ initialData }) => {
 
       {/* Quick Actions Grid */}
       <h2 className="text-base font-bold text-gray-900 mb-4 px-1">Quick Actions</h2>
-      <div className="grid grid-cols-4 gap-3 mb-8">
+      <div className="grid grid-cols-4 sm:grid-cols-5 gap-3 mb-8">
         {quickActions.map((action) => (
           <motion.button
             key={action.label}
@@ -178,6 +182,7 @@ const Dashboard: React.FC<DashboardProps> = ({ initialData }) => {
       <BuyAirtimeModal isOpen={isBuyAirtimeOpen} onClose={() => setIsBuyAirtimeOpen(false)} />
       <BuyElectricityModal isOpen={isBuyElectrictyOpen} onClose={() => setIsBuyElectrictyOpen(false)} />
       <BuyCableModal isOpen={isBuyCableTV} onClose={() => setIsBuyCableTV(false)} />
+      <BuyEducationModal isOpen={isBuyEducationOpen} onClose={() => setIsBuyEducationOpen(false)} />
     </div>
   );
 };

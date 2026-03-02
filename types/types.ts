@@ -55,6 +55,7 @@ export enum TransactionType {
   WALLET_FUNDING = 'WALLET_FUNDING',
   ELECTRICITY = 'ELECTRICITY',
   CABLE_TV = 'CABLE_TV',
+  EDUCATION = 'EDUCATION',
 }
 
 export enum TransactionStatus {

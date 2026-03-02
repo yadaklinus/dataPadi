@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   ArrowDownLeft, Printer, Wifi, Smartphone, FileText, Loader2, AlertCircle,
-  Tv, Zap, CreditCard, Receipt, Clock
+  Tv, Zap, CreditCard, Receipt, Clock, GraduationCap
 } from 'lucide-react';
 import { getTransactionHistory } from '@/app/actions/user';
 import { CURRENCY } from '@/constants';
@@ -17,8 +17,8 @@ const History: React.FC = () => {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // 1. Added Cable and Electricity to the UI filters
-  const filters = ['All', 'Data', 'Airtime', 'Pins', 'Funding', 'Cable', 'Electricity'];
+  // 1. Added Cable, Electricity, and Education to the UI filters
+  const filters = ['All', 'Data', 'Airtime', 'Pins', 'Funding', 'Cable', 'Electricity', 'Education'];
 
   useEffect(() => {
     fetchHistory();
@@ -36,7 +36,8 @@ const History: React.FC = () => {
       'Pins': TransactionType.RECHARGE_PIN,
       'Funding': TransactionType.WALLET_FUNDING,
       'Cable': TransactionType.CABLE_TV,
-      'Electricity': TransactionType.ELECTRICITY
+      'Electricity': TransactionType.ELECTRICITY,
+      'Education': TransactionType.EDUCATION
     };
 
     const apiType = filterToApiMap[filter] || filter;
@@ -74,6 +75,8 @@ const History: React.FC = () => {
         return { icon: <Tv size={20} />, bg: 'bg-purple-50', color: 'text-purple-600' };
       case TransactionType.ELECTRICITY:
         return { icon: <Zap size={20} />, bg: 'bg-amber-50', color: 'text-amber-600' };
+      case TransactionType.EDUCATION:
+        return { icon: <GraduationCap size={20} />, bg: 'bg-indigo-50', color: 'text-indigo-600' };
       case TransactionType.WALLET_FUNDING:
         return { icon: <CreditCard size={20} />, bg: 'bg-indigo-50', color: 'text-indigo-600' };
       case TransactionType.RECHARGE_PIN:
@@ -156,7 +159,16 @@ const History: React.FC = () => {
                       {/* Details */}
                       <div>
                         <p className="font-bold text-gray-900 text-sm mb-0.5 line-clamp-1">
-                          {(tx as any).metadata?.planName || (tx as any).metadata?.network || tx.type.replace('_', ' ')}
+                          {
+                            (() => {
+                              // Handle JAMB Mock specific displays
+                              if (tx.type === TransactionType.EDUCATION) {
+                                if ((tx as any).metadata?.examType === 'utme-mock') return 'JAMB UTME (With Mock)';
+                                if ((tx as any).metadata?.examType === 'utme-no-mock') return 'JAMB UTME (No Mock)';
+                              }
+                              return (tx as any).metadata?.planName || (tx as any).metadata?.network || (tx as any).metadata?.provider || tx.type.replace('_', ' ')
+                            })()
+                          }
                         </p>
                         <div className="flex items-center gap-2">
                           <p className="text-xs text-gray-500 font-medium">
