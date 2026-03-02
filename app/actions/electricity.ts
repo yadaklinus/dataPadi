@@ -32,6 +32,7 @@ export interface ElectricityPaymentResponse {
   customerName?: string;
   transactionId?: string;
   error?: string;
+  units?: string;
 }
 
 // --- ELECTRICITY ROUTES ---

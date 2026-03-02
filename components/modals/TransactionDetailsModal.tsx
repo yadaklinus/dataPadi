@@ -98,6 +98,10 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({ isOpe
                                         <Copy size={16} className="text-amber-600" />
                                     </button>
                                 </div>
+                                <p className="text-xs text-amber-600 uppercase font-bold tracking-wider mb-1">Units</p>
+                                <div className="flex items-center justify-center gap-2">
+                                    <p className="text-2xl font-mono font-bold text-gray-800 tracking-widest">{details.units}</p>
+                                </div>
                             </div>
                         )}
                     </div>

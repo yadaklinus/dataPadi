@@ -29,6 +29,7 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
   // Validation & Transaction States
   const [customerName, setCustomerName] = useState('');
   const [generatedToken, setGeneratedToken] = useState('');
+  const [units, setUnits] = useState('');
   const [isLoadingDiscos, setIsLoadingDiscos] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [isValidated, setIsValidated] = useState(false);
@@ -66,6 +67,7 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
     setAmount('');
     setCustomerName('');
     setGeneratedToken('');
+    setUnits('')
     setIsValidated(false);
     setIsValidating(false);
     setIsProcessing(false);
@@ -130,6 +132,7 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
       // Save Token if Prepaid and provided by the backend
       if (res.token) {
         setGeneratedToken(res.token);
+        setUnits(res.units || '');
       }
       setStep('SUCCESS');
     } else {
@@ -206,8 +209,8 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
                 <button
                   onClick={() => { setMeterType('PREPAID'); setIsValidated(false); }}
                   className={`flex-1 py-3 px-4 rounded-xl border-2 font-bold transition-colors ${meterType === 'PREPAID'
-                      ? 'border-amber-500 bg-amber-50 text-amber-700'
-                      : 'border-gray-200 text-gray-500 hover:border-amber-200'
+                    ? 'border-amber-500 bg-amber-50 text-amber-700'
+                    : 'border-gray-200 text-gray-500 hover:border-amber-200'
                     }`}
                 >
                   Prepaid
@@ -215,8 +218,8 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
                 <button
                   onClick={() => { setMeterType('POSTPAID'); setIsValidated(false); }}
                   className={`flex-1 py-3 px-4 rounded-xl border-2 font-bold transition-colors ${meterType === 'POSTPAID'
-                      ? 'border-amber-500 bg-amber-50 text-amber-700'
-                      : 'border-gray-200 text-gray-500 hover:border-amber-200'
+                    ? 'border-amber-500 bg-amber-50 text-amber-700'
+                    : 'border-gray-200 text-gray-500 hover:border-amber-200'
                     }`}
                 >
                   Postpaid
@@ -270,8 +273,8 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
                           key={amt}
                           onClick={() => { setAmount(amt); setErrorMessage(''); }}
                           className={`px-4 py-2 rounded-full text-xs font-bold border transition-all shrink-0 ${amount === amt
-                              ? 'border-amber-500 bg-amber-50 text-amber-700 shadow-sm'
-                              : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                            ? 'border-amber-500 bg-amber-50 text-amber-700 shadow-sm'
+                            : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
                             }`}
                         >
                           ₦{parseInt(amt).toLocaleString()}
@@ -412,6 +415,10 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
                 <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-2">Your Token</p>
                 <p className="text-2xl font-mono text-gray-900 font-black tracking-widest break-all">
                   {generatedToken.match(/.{1,4}/g)?.join('-') || generatedToken}
+                </p>
+                <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-2">Units</p>
+                <p className="text-2xl font-mono text-gray-900 font-black tracking-widest break-all">
+                  {units}
                 </p>
               </div>
             )}
