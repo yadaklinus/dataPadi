@@ -3,10 +3,11 @@ import React, { useState, useEffect } from 'react';
 import BottomSheet from './BottomSheet';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import PinInput from '../ui/PinInput';
 import NetworkSelector from '../ui/NetworkSelector';
 import { NetworkId } from '@/types/types';
 import { CURRENCY } from '@/constants';
-import { Phone, ChevronRight, CheckCircle, Search, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react';
+import { Phone, ChevronRight, CheckCircle, Search, ArrowLeft, AlertCircle, Loader2, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { getDataPlans, buyData, NetworkPlans } from '@/app/actions/vtu';
 
@@ -22,7 +23,7 @@ interface UIPlan {
   groupName: string;
 }
 
-type Step = 'NETWORK' | 'PLAN' | 'PHONE' | 'CONFIRM' | 'SUCCESS';
+type Step = 'NETWORK' | 'PLAN' | 'PHONE' | 'CONFIRM' | 'PIN' | 'SUCCESS';
 
 const BuyDataModal: React.FC<BuyDataModalProps> = ({ isOpen, onClose }) => {
   const [step, setStep] = useState<Step>('NETWORK');
@@ -33,6 +34,7 @@ const BuyDataModal: React.FC<BuyDataModalProps> = ({ isOpen, onClose }) => {
   const [apiPlans, setApiPlans] = useState<NetworkPlans | null>(null);
   const [isLoadingPlans, setIsLoadingPlans] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
+  const [transactionPin, setTransactionPin] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -60,6 +62,7 @@ const BuyDataModal: React.FC<BuyDataModalProps> = ({ isOpen, onClose }) => {
     setSelectedNetwork(null);
     setSelectedPlan(null);
     setPhoneNumber('');
+    setTransactionPin('');
     setIsPurchasing(false);
     setSearchQuery('');
     setErrorMessage('');
@@ -124,8 +127,12 @@ const BuyDataModal: React.FC<BuyDataModalProps> = ({ isOpen, onClose }) => {
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handlePurchase = async () => {
+  const handlePurchase = async (pinToUse: string) => {
     if (!selectedNetwork || !selectedPlan || !phoneNumber) return;
+    if (pinToUse.length !== 4) {
+      setErrorMessage("Please enter a valid 4-digit PIN");
+      return;
+    }
 
     setIsPurchasing(true);
     setErrorMessage('');
@@ -133,7 +140,8 @@ const BuyDataModal: React.FC<BuyDataModalProps> = ({ isOpen, onClose }) => {
     const result = await buyData(
       selectedNetwork.toString().toUpperCase(),
       selectedPlan.id,
-      phoneNumber
+      phoneNumber,
+      pinToUse
     );
 
     setIsPurchasing(false);
@@ -142,6 +150,7 @@ const BuyDataModal: React.FC<BuyDataModalProps> = ({ isOpen, onClose }) => {
       setStep('SUCCESS');
     } else {
       setErrorMessage(result.error || 'Transaction failed. Please try again.');
+      setTransactionPin('');
     }
   };
 
@@ -304,15 +313,71 @@ const BuyDataModal: React.FC<BuyDataModalProps> = ({ isOpen, onClose }) => {
             <div className="mt-auto pt-4 pb-2">
               <Button
                 fullWidth
-                onClick={handlePurchase}
+                onClick={() => setStep('PIN')}
                 disabled={isPurchasing}
+              >
+                Proceed
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {step === 'PIN' && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex flex-col flex-1 h-full w-full"
+          >
+            <button
+              onClick={() => {
+                setStep('CONFIRM');
+                setTransactionPin('');
+                setErrorMessage('');
+              }}
+              className="text-sm text-primary mb-5 font-bold flex items-center gap-1.5 w-fit hover:text-blue-800 transition-colors"
+              disabled={isPurchasing}
+            >
+              <ArrowLeft size={16} /> Back
+            </button>
+
+            <div className="flex-1 flex flex-col items-center justify-center -mt-10">
+              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
+                <Lock size={28} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Enter Transaction PIN</h3>
+              <p className="text-sm text-slate-500 mb-8 text-center px-4">
+                Please enter your 4-digit PIN to authorize this payment of <span className="font-bold text-slate-700">{CURRENCY}{selectedPlan?.price.toLocaleString()}</span>
+              </p>
+
+              <PinInput
+                length={4}
+                value={transactionPin}
+                onChange={(val) => {
+                  setTransactionPin(val);
+                  if (errorMessage) setErrorMessage('');
+                }}
+                onComplete={(val) => {
+                  handlePurchase(val);
+                }}
+                disabled={isPurchasing}
+                error={errorMessage}
+              />
+            </div>
+
+            {/* Anchored Bottom Action */}
+            <div className="mt-auto pt-4 shrink-0">
+              <Button
+                fullWidth
+                onClick={() => handlePurchase(transactionPin)}
+                disabled={isPurchasing || transactionPin.length !== 4}
+                className="h-14 text-base rounded-2xl shadow-md"
               >
                 {isPurchasing ? (
                   <span className="flex items-center gap-2 justify-center">
-                    <Loader2 size={18} className="animate-spin" /> Processing...
+                    <Loader2 size={20} className="animate-spin" /> Verifying...
                   </span>
                 ) : (
-                  'Confirm Purchase'
+                  'Confirm PIN'
                 )}
               </Button>
             </div>

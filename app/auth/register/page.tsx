@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { registerUser } from '@/app/actions/auth/register';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import PinInput from '@/components/ui/PinInput';
 
 export default function Register() {
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [transactionPin, setTransactionPin] = useState('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -23,6 +25,14 @@ export default function Register() {
     setSuccess(null);
 
     const formData = new FormData(e.currentTarget);
+
+    if (transactionPin.length !== 4) {
+      setError('Please enter a 4-digit transaction PIN');
+      setIsLoading(false);
+      return;
+    }
+    formData.append('transactionPin', transactionPin);
+
     const result = await registerUser(formData);
 
     if (!result.success) {
@@ -129,6 +139,26 @@ export default function Register() {
               }
               className="[&>input]:rounded-2xl"
             />
+
+            <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
+              <div className="mb-4 text-center">
+                <h3 className="text-sm font-bold text-slate-900 mb-1">Set Transaction PIN</h3>
+                <p className="text-xs text-slate-500 max-w-xs mx-auto">
+                  You will use this 4-digit PIN to confirm airtime, data, and bill payments.
+                </p>
+              </div>
+              <div className="flex justify-center px-4">
+                <PinInput
+                  length={4}
+                  value={transactionPin}
+                  onChange={(val) => {
+                    setTransactionPin(val);
+                    if (error && error.includes('PIN')) setError(null);
+                  }}
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
 
             <Button
               type="submit"

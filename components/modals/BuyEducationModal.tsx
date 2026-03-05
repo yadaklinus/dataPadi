@@ -4,7 +4,8 @@ import BottomSheet from './BottomSheet';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
 import { CURRENCY } from '@/constants';
-import { Phone, CheckCircle, ArrowLeft, AlertCircle, Loader2, GraduationCap, FileText, User } from 'lucide-react';
+import { Phone, CheckCircle, ArrowLeft, AlertCircle, Loader2, GraduationCap, FileText, User, Lock } from 'lucide-react';
+import PinInput from '../ui/PinInput';
 import { motion } from 'framer-motion';
 import { verifyJambProfile, buyEducationPin } from '@/app/actions/vtu';
 
@@ -14,7 +15,7 @@ interface BuyEducationModalProps {
 }
 
 type Provider = 'WAEC' | 'JAMB' | 'JAMB_MOCK';
-type Step = 'PROVIDER' | 'DETAILS' | 'CONFIRM' | 'SUCCESS';
+type Step = 'PROVIDER' | 'DETAILS' | 'CONFIRM' | 'PIN' | 'SUCCESS';
 
 const EDUCATION_PRODUCTS = {
     WAEC: { name: 'WAEC Result Checker', price: 3500, examType: 'waecdirect', icon: FileText },
@@ -32,6 +33,7 @@ const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose }
 
     const [isVerifying, setIsVerifying] = useState(false);
     const [isPurchasing, setIsPurchasing] = useState(false);
+    const [transactionPin, setTransactionPin] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [transactionData, setTransactionData] = useState<any>(null);
 
@@ -43,6 +45,7 @@ const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose }
         setVerifiedName(null);
         setIsPurchasing(false);
         setIsVerifying(false);
+        setTransactionPin('');
         setErrorMessage('');
         setTransactionData(null);
     };
@@ -100,8 +103,12 @@ const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose }
         setStep('CONFIRM');
     };
 
-    const handlePurchase = async () => {
+    const handlePurchase = async (pinToUse: string) => {
         if (!provider) return;
+        if (pinToUse.length !== 4) {
+            setErrorMessage("Please enter a valid 4-digit PIN");
+            return;
+        }
 
         setIsPurchasing(true);
         setErrorMessage('');
@@ -111,7 +118,9 @@ const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose }
         // Use 'JAMB' provider explicitly for backend endpoint when calling buyEducationPin 
         // to match backend expectations "JAMB" / "WAEC"
         const backendProvider = isJambProvider ? 'JAMB' : 'WAEC';
-        const result = await buyEducationPin(backendProvider, product.examType, phoneNo, isJambProvider ? profileId : undefined);
+        const passedProfileId = isJambProvider ? profileId : undefined;
+
+        const result = await buyEducationPin(backendProvider, product.examType, phoneNo, pinToUse, passedProfileId);
 
         setIsPurchasing(false);
 
@@ -124,6 +133,7 @@ const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose }
             setStep('SUCCESS');
         } else {
             setErrorMessage(result.error || 'Transaction failed. Please try again.');
+            setTransactionPin('');
         }
     };
 
@@ -283,15 +293,70 @@ const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose }
                         <div className="mt-auto pt-4 pb-2">
                             <Button
                                 fullWidth
-                                onClick={handlePurchase}
+                                onClick={() => setStep('PIN')}
                                 disabled={isPurchasing}
+                            >
+                                Proceed
+                            </Button>
+                        </div>
+                    </motion.div>
+                )}
+
+                {step === 'PIN' && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="flex flex-col flex-1 h-full w-full"
+                    >
+                        <button
+                            onClick={() => {
+                                setStep('CONFIRM');
+                                setTransactionPin('');
+                                setErrorMessage('');
+                            }}
+                            className="text-sm text-primary mb-5 font-bold flex items-center gap-1.5 w-fit hover:text-blue-800 transition-colors"
+                            disabled={isPurchasing}
+                        >
+                            <ArrowLeft size={16} /> Back
+                        </button>
+
+                        <div className="flex-1 flex flex-col items-center justify-center -mt-10">
+                            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
+                                <Lock size={28} />
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900 mb-2">Enter Transaction PIN</h3>
+                            <p className="text-sm text-slate-500 mb-8 text-center px-4">
+                                Please enter your 4-digit PIN to authorize this payment of <span className="font-bold text-slate-700">{CURRENCY}{EDUCATION_PRODUCTS[provider!].price.toLocaleString()}</span>
+                            </p>
+
+                            <PinInput
+                                length={4}
+                                value={transactionPin}
+                                onChange={(val) => {
+                                    setTransactionPin(val);
+                                    if (errorMessage) setErrorMessage('');
+                                }}
+                                onComplete={(val) => {
+                                    handlePurchase(val);
+                                }}
+                                disabled={isPurchasing}
+                                error={errorMessage}
+                            />
+                        </div>
+
+                        <div className="mt-auto pt-4 shrink-0">
+                            <Button
+                                fullWidth
+                                onClick={() => handlePurchase(transactionPin)}
+                                disabled={isPurchasing || transactionPin.length !== 4}
+                                className="h-14 text-base rounded-2xl shadow-md"
                             >
                                 {isPurchasing ? (
                                     <span className="flex items-center gap-2 justify-center">
-                                        <Loader2 size={18} className="animate-spin" /> Processing...
+                                        <Loader2 size={20} className="animate-spin" /> Verifying...
                                     </span>
                                 ) : (
-                                    'Confirm Purchase'
+                                    'Confirm PIN'
                                 )}
                             </Button>
                         </div>

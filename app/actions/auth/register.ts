@@ -11,6 +11,7 @@ export async function registerUser(formData: FormData) {
     email: formData.get('email'),
     phoneNumber: formData.get('phoneNumber'),
     password: formData.get('password'),
+    transactionPin: formData.get('transactionPin'),
   };
 
   try {

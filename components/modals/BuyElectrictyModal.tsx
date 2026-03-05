@@ -1,9 +1,10 @@
 "use client"
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, AlertCircle, Loader2, ArrowLeft, Lightbulb, ChevronRight, Phone } from 'lucide-react';
+import { CheckCircle, AlertCircle, Loader2, ArrowLeft, Lightbulb, ChevronRight, Phone, Lock } from 'lucide-react';
 import BottomSheet from './BottomSheet';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import PinInput from '../ui/PinInput';
 import { motion } from 'framer-motion';
 import { getDiscos, verifyMeter, payElectricity, DiscoProvider } from '@/app/actions/electricity';
 
@@ -12,7 +13,7 @@ interface BuyElectricityModalProps {
   onClose: () => void;
 }
 
-type Step = 'PROVIDER' | 'DETAILS' | 'CONFIRM' | 'SUCCESS';
+type Step = 'PROVIDER' | 'DETAILS' | 'CONFIRM' | 'PIN' | 'SUCCESS';
 
 const QUICK_AMOUNTS = ['1000', '2000', '5000', '10000'];
 
@@ -34,6 +35,7 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
   const [isValidating, setIsValidating] = useState(false);
   const [isValidated, setIsValidated] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [transactionPin, setTransactionPin] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
   const selectedProvider = discos.find(p => p.id === providerId);
@@ -71,6 +73,7 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
     setIsValidated(false);
     setIsValidating(false);
     setIsProcessing(false);
+    setTransactionPin('');
     setErrorMessage('');
   };
 
@@ -106,12 +109,16 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
     setIsValidating(false);
   };
 
-  const handlePurchase = async () => {
+  const handlePurchase = async (pinToUse: string) => {
     const purchaseAmount = parseFloat(amount);
 
     if (!phoneNumber || phoneNumber.length < 10) {
       setErrorMessage('Please provide a valid contact phone number');
       setStep('DETAILS');
+      return;
+    }
+    if (pinToUse.length !== 4) {
+      setErrorMessage("Please enter a valid 4-digit PIN");
       return;
     }
 
@@ -123,7 +130,8 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
       meterNo: meterNumber,
       meterType: meterType === 'PREPAID' ? '01' : '02',
       amount: purchaseAmount,
-      phoneNo: phoneNumber
+      phoneNo: phoneNumber,
+      transactionPin: pinToUse
     });
 
     setIsProcessing(false);
@@ -137,6 +145,7 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
       setStep('SUCCESS');
     } else {
       setErrorMessage(res.error || 'Transaction failed. Please try again.');
+      setTransactionPin('');
     }
   };
 
@@ -378,16 +387,72 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
             <div className="mt-auto pt-4 shrink-0">
               <Button
                 fullWidth
-                onClick={handlePurchase}
+                onClick={() => setStep('PIN')}
                 disabled={isProcessing}
+                className="h-14 text-base rounded-2xl shadow-md bg-amber-500 hover:bg-amber-600 text-white"
+              >
+                Proceed
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {step === 'PIN' && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex flex-col flex-1 h-full w-full"
+          >
+            <button
+              onClick={() => {
+                setStep('CONFIRM');
+                setTransactionPin('');
+                setErrorMessage('');
+              }}
+              className="text-sm text-primary mb-5 font-bold flex items-center gap-1.5 w-fit hover:text-blue-800 transition-colors"
+              disabled={isProcessing}
+            >
+              <ArrowLeft size={16} /> Back
+            </button>
+
+            <div className="flex-1 flex flex-col items-center justify-center -mt-10">
+              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
+                <Lock size={28} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Enter Transaction PIN</h3>
+              <p className="text-sm text-slate-500 mb-8 text-center px-4">
+                Please enter your 4-digit PIN to authorize this payment of <span className="font-bold text-slate-700">₦{Number(amount).toLocaleString()}</span>
+              </p>
+
+              <PinInput
+                length={4}
+                value={transactionPin}
+                onChange={(val) => {
+                  setTransactionPin(val);
+                  if (errorMessage) setErrorMessage('');
+                }}
+                onComplete={(val) => {
+                  handlePurchase(val);
+                }}
+                disabled={isProcessing}
+                error={errorMessage}
+              />
+            </div>
+
+            {/* Anchored Bottom Action */}
+            <div className="mt-auto pt-4 shrink-0">
+              <Button
+                fullWidth
+                onClick={() => handlePurchase(transactionPin)}
+                disabled={isProcessing || transactionPin.length !== 4}
                 className="h-14 text-base rounded-2xl shadow-md bg-amber-500 hover:bg-amber-600 text-white"
               >
                 {isProcessing ? (
                   <span className="flex items-center gap-2 justify-center">
-                    <Loader2 size={20} className="animate-spin" /> Processing Payment...
+                    <Loader2 size={20} className="animate-spin" /> Verifying...
                   </span>
                 ) : (
-                  'Confirm & Pay'
+                  'Confirm PIN'
                 )}
               </Button>
             </div>

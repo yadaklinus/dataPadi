@@ -23,6 +23,7 @@ export interface CablePaymentPayload {
   packageCode: string;
   smartCardNo: string;
   phoneNo: string;
+  transactionPin: string;
 }
 
 /**
@@ -37,9 +38,9 @@ export async function getCablePackages() {
       return { success: false, error: result.message || 'Failed to fetch cable packages' };
     }
 
-    return { 
-      success: true, 
-      data: result.data as CablePackagesResponse 
+    return {
+      success: true,
+      data: result.data as CablePackagesResponse
     };
   } catch (error) {
     console.error('Cable Packages Fetch Error:', error);
@@ -64,10 +65,10 @@ export async function verifySmartCard(cableTV: string, smartCardNo: string) {
       return { success: false, error: result.message || 'Invalid smartcard number or mismatching provider' };
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       // Handle potential API key variations for customer name
-      customerName: result.data["customer name"] || result.data["customer_name"] || 'Unknown Customer' 
+      customerName: result.data["customer name"] || result.data["customer_name"] || 'Unknown Customer'
     };
   } catch (error) {
     console.error('Smartcard Verification Error:', error);
@@ -84,17 +85,17 @@ export async function payCableSubscription(payload: CablePaymentPayload) {
       method: 'POST',
       body: JSON.stringify(payload),
     });
-    
+
     const result = await response.json();
-    
+
     if (!response.ok) {
       return { success: false, error: result.message || 'Payment failed' };
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: result.message,
-      transactionId: result.transactionId 
+      transactionId: result.transactionId
     };
   } catch (error) {
     console.error('Cable Payment Error:', error);

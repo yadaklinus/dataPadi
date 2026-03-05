@@ -1,9 +1,10 @@
 "use client"
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, AlertCircle, Loader2, ArrowLeft, Tv, ChevronRight, Phone, Search } from 'lucide-react';
+import { CheckCircle, AlertCircle, Loader2, ArrowLeft, Tv, ChevronRight, Phone, Search, Lock } from 'lucide-react';
 import BottomSheet from './BottomSheet';
 import Button from '../ui/Button';
 import Input from '../ui/Input';
+import PinInput from '../ui/PinInput';
 import { motion } from 'framer-motion';
 import { getCablePackages, verifySmartCard, payCableSubscription, CablePackagesResponse, CablePackage } from '@/app/actions/cable';
 
@@ -12,7 +13,7 @@ interface BuyCableModalProps {
   onClose: () => void;
 }
 
-type Step = 'PROVIDER' | 'DETAILS' | 'CONFIRM' | 'SUCCESS';
+type Step = 'PROVIDER' | 'DETAILS' | 'CONFIRM' | 'PIN' | 'SUCCESS';
 
 interface UIPlan {
   id: string;
@@ -45,6 +46,7 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
   const [isValidating, setIsValidating] = useState(false);
   const [isValidated, setIsValidated] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [transactionPin, setTransactionPin] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
   const selectedProvider = CABLE_PROVIDERS.find(p => p.id === providerId);
@@ -80,6 +82,7 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
     setIsValidated(false);
     setIsValidating(false);
     setIsProcessing(false);
+    setTransactionPin('');
     setErrorMessage('');
   };
 
@@ -147,11 +150,15 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handlePurchase = async () => {
+  const handlePurchase = async (pinToUse: string) => {
     if (!selectedPlan) return;
 
     if (!phoneNumber || phoneNumber.length < 10) {
       setErrorMessage('Please provide a valid contact phone number');
+      return;
+    }
+    if (pinToUse.length !== 4) {
+      setErrorMessage("Please enter a valid 4-digit PIN");
       return;
     }
 
@@ -164,7 +171,8 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
       cableTV: providerId,
       packageCode: selectedPlan.id,
       smartCardNo: smartCardNumber,
-      phoneNo: phoneNumber
+      phoneNo: phoneNumber,
+      transactionPin: pinToUse
     });
 
     setIsProcessing(false);
@@ -173,6 +181,7 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
       setStep('SUCCESS');
     } else {
       setErrorMessage(res.error || 'Transaction failed. Please try again.');
+      setTransactionPin('');
     }
   };
 
@@ -397,16 +406,72 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
             <div className="mt-auto pt-4 shrink-0">
               <Button
                 fullWidth
-                onClick={handlePurchase}
+                onClick={() => setStep('PIN')}
                 disabled={isProcessing}
+                className="h-14 text-base rounded-2xl shadow-md bg-purple-600 hover:bg-purple-700 text-white"
+              >
+                Proceed
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {step === 'PIN' && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex flex-col flex-1 h-full w-full"
+          >
+            <button
+              onClick={() => {
+                setStep('CONFIRM');
+                setTransactionPin('');
+                setErrorMessage('');
+              }}
+              className="text-sm text-primary mb-5 font-bold flex items-center gap-1.5 w-fit hover:text-blue-800 transition-colors"
+              disabled={isProcessing}
+            >
+              <ArrowLeft size={16} /> Back
+            </button>
+
+            <div className="flex-1 flex flex-col items-center justify-center -mt-10">
+              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
+                <Lock size={28} />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Enter Transaction PIN</h3>
+              <p className="text-sm text-slate-500 mb-8 text-center px-4">
+                Please enter your 4-digit PIN to authorize this payment of <span className="font-bold text-slate-700">₦{selectedPlan?.price.toLocaleString()}</span>
+              </p>
+
+              <PinInput
+                length={4}
+                value={transactionPin}
+                onChange={(val) => {
+                  setTransactionPin(val);
+                  if (errorMessage) setErrorMessage('');
+                }}
+                onComplete={(val) => {
+                  handlePurchase(val);
+                }}
+                disabled={isProcessing}
+                error={errorMessage}
+              />
+            </div>
+
+            {/* Anchored Bottom Action */}
+            <div className="mt-auto pt-4 shrink-0">
+              <Button
+                fullWidth
+                onClick={() => handlePurchase(transactionPin)}
+                disabled={isProcessing || transactionPin.length !== 4}
                 className="h-14 text-base rounded-2xl shadow-md bg-purple-600 hover:bg-purple-700 text-white"
               >
                 {isProcessing ? (
                   <span className="flex items-center gap-2 justify-center">
-                    <Loader2 size={20} className="animate-spin" /> Processing Payment...
+                    <Loader2 size={20} className="animate-spin" /> Verifying...
                   </span>
                 ) : (
-                  'Confirm & Pay'
+                  'Confirm PIN'
                 )}
               </Button>
             </div>

@@ -78,11 +78,11 @@ export async function getDataPlans() {
 /**
  * Buy a data bundle.
  */
-export async function buyData(network: string, planId: string, phoneNumber: string): Promise<VtuResponse> {
+export async function buyData(network: string, planId: string, phoneNumber: string, transactionPin: string): Promise<VtuResponse> {
   try {
     const response = await authorizedFetch('/api/v1/vtu/data', { // [cite: 165]
       method: 'POST',
-      body: JSON.stringify({ network, planId, phoneNumber }), // [cite: 168, 169]
+      body: JSON.stringify({ network, planId, phoneNumber, transactionPin }), // [cite: 168, 169]
     });
 
     const result = await response.json();
@@ -120,11 +120,11 @@ export async function getDataTransactionStatus(reference: string): Promise<VtuRe
  * Top up airtime.
  * Minimum amount is 50.
  */
-export async function buyAirtime(network: string, amount: number, phoneNumber: string): Promise<VtuResponse> {
+export async function buyAirtime(network: string, amount: number, phoneNumber: string, transactionPin: string): Promise<VtuResponse> {
   try {
     const response = await authorizedFetch('/api/v1/vtu/airtime', { // [cite: 194]
       method: 'POST',
-      body: JSON.stringify({ network, amount, phoneNumber }), // [cite: 196]
+      body: JSON.stringify({ network, amount, phoneNumber, transactionPin }), // [cite: 196]
     });
 
 
@@ -241,9 +241,9 @@ export async function verifyJambProfile(profileId: string) {
   }
 }
 
-export async function buyEducationPin(provider: 'WAEC' | 'JAMB', examType: string, phoneNo: string, profileId?: string) {
+export async function buyEducationPin(provider: 'WAEC' | 'JAMB', examType: string, phoneNo: string, transactionPin: string, profileId?: string) {
   try {
-    const body: any = { provider, examType, phoneNo };
+    const body: any = { provider, examType, phoneNo, transactionPin };
     if (provider === 'JAMB' && profileId) {
       body.profileId = profileId;
     }
