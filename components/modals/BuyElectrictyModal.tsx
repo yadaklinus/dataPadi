@@ -28,6 +28,7 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
 
   // Validation & Transaction States
   const [customerName, setCustomerName] = useState('');
+  const [minimumAmount, setMinimumAmount] = useState('');
   const [generatedToken, setGeneratedToken] = useState('');
   const [units, setUnits] = useState('');
   const [isLoadingDiscos, setIsLoadingDiscos] = useState(false);
@@ -97,8 +98,11 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
 
     const res = await verifyMeter(providerId, meterNumber, meterType === 'PREPAID');
 
+    console.log("verifyMeter", res.data);
+
     if (res.success && res.data) {
       setCustomerName(res.data["customer_name"]);
+      setMinimumAmount(res.data["minAmount"]);
       setIsValidated(true);
     } else {
       setErrorMessage(res.error || 'Unable to verify meter number. Please check your details.');
@@ -117,6 +121,11 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
 
     setIsProcessing(true);
     setErrorMessage('');
+
+    if (purchaseAmount < Number(minimumAmount)) {
+      setErrorMessage(`Amount must be greater than ${minimumAmount}`);
+      return;
+    }
 
     const res = await payElectricity({
       discoCode: providerId,
@@ -253,6 +262,7 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
                     <div>
                       <p className="text-[10px] text-green-600 font-bold uppercase tracking-wider">Verified Customer</p>
                       <p className="font-bold text-gray-800">{customerName}</p>
+                      <p className="text-[10px] text-green-600 font-bold uppercase tracking-wider">Minimum Amount: ₦{minimumAmount}</p>
                     </div>
                   </div>
 
