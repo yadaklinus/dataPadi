@@ -135,7 +135,7 @@ const BuyAirtimeModal: React.FC<BuyAirtimeModalProps> = ({ isOpen, onClose }) =>
                   label="Phone Number"
                   placeholder="e.g. 08012345678"
                   type="tel"
-                  maxLength={11}
+                  maxLength={19}
                   value={phoneNumber}
                   onChange={(e) => {
                     setPhoneNumber(e.target.value.replace(/\D/g, ''));

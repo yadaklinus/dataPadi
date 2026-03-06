@@ -24,7 +24,6 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
   const [providerId, setProviderId] = useState('');
   const [meterType, setMeterType] = useState<'PREPAID' | 'POSTPAID'>('PREPAID');
   const [meterNumber, setMeterNumber] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [amount, setAmount] = useState('');
 
   // Validation & Transaction States
@@ -65,7 +64,6 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
     setProviderId('');
     setMeterType('PREPAID');
     setMeterNumber('');
-    setPhoneNumber('');
     setAmount('');
     setCustomerName('');
     setGeneratedToken('');
@@ -112,11 +110,6 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
   const handlePurchase = async (pinToUse: string) => {
     const purchaseAmount = parseFloat(amount);
 
-    if (!phoneNumber || phoneNumber.length < 10) {
-      setErrorMessage('Please provide a valid contact phone number');
-      setStep('DETAILS');
-      return;
-    }
     if (pinToUse.length !== 4) {
       setErrorMessage("Please enter a valid 4-digit PIN");
       return;
@@ -130,17 +123,18 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
       meterNo: meterNumber,
       meterType: meterType === 'PREPAID' ? '01' : '02',
       amount: purchaseAmount,
-      phoneNo: phoneNumber,
       transactionPin: pinToUse
     });
 
     setIsProcessing(false);
 
+    console.log(res);
+
     if (res.success) {
       // Save Token if Prepaid and provided by the backend
       if (res.token) {
         setGeneratedToken(res.token);
-        setUnits(res.units || '');
+        setUnits(res.units);
       }
       setStep('SUCCESS');
     } else {
@@ -292,19 +286,6 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
                     </div>
                   </div>
 
-                  {/* Phone Number for Receipt */}
-                  <Input
-                    label="Contact Phone Number"
-                    placeholder="e.g. 08012345678"
-                    type="tel"
-                    maxLength={11}
-                    value={phoneNumber}
-                    onChange={(e) => {
-                      setPhoneNumber(e.target.value.replace(/\D/g, ''));
-                      setErrorMessage('');
-                    }}
-                    leftIcon={<Phone size={18} className="text-gray-400" />}
-                  />
                 </motion.div>
               ) : null}
             </div>
@@ -329,7 +310,7 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
               ) : (
                 <Button
                   fullWidth
-                  disabled={!amount || Number(amount) < 100 || phoneNumber.length < 10}
+                  disabled={!amount || Number(amount) < 100}
                   onClick={() => setStep('CONFIRM')}
                   className="h-14 text-base rounded-2xl shadow-md bg-amber-500 hover:bg-amber-600 text-white"
                 >
@@ -338,166 +319,173 @@ const BuyElectricityModal: React.FC<BuyElectricityModalProps> = ({ isOpen, onClo
               )}
             </div>
           </motion.div>
-        )}
+        )
+        }
 
         {/* STEP 3: CONFIRM */}
-        {step === 'CONFIRM' && (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex flex-col flex-1 h-full w-full"
-          >
-            <button
-              onClick={() => setStep('DETAILS')}
-              className="text-sm text-amber-600 mb-5 font-bold flex items-center gap-1.5 w-fit hover:text-amber-800 transition-colors"
+        {
+          step === 'CONFIRM' && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex flex-col flex-1 h-full w-full"
             >
-              <ArrowLeft size={16} /> Edit Details
-            </button>
-
-            {/* Digital Receipt Card */}
-            <div className="bg-white border border-gray-100 shadow-sm rounded-3xl p-6 text-center mb-6 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-400 to-amber-600" />
-
-              <p className="text-gray-500 text-sm mb-1 mt-2 font-medium">You are about to pay</p>
-              <h3 className="text-lg font-bold text-gray-900 mb-2 uppercase tracking-wide">{selectedProvider?.name}</h3>
-              <p className="text-amber-600 font-black text-4xl mb-6">₦{Number(amount).toLocaleString()}</p>
-
-              <div className="border-t-2 border-dashed border-gray-100 relative my-6">
-                <div className="absolute -left-8 -top-3 w-6 h-6 bg-gray-50 rounded-full" />
-                <div className="absolute -right-8 -top-3 w-6 h-6 bg-gray-50 rounded-full" />
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-500">Customer Name</span>
-                  <span className="font-semibold text-gray-900">{customerName}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-500">Meter Number</span>
-                  <span className="font-mono font-semibold text-gray-900">{meterNumber}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-500">Meter Type</span>
-                  <span className="font-semibold text-gray-900">{meterType}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Anchored Bottom Action */}
-            <div className="mt-auto pt-4 shrink-0">
-              <Button
-                fullWidth
-                onClick={() => setStep('PIN')}
-                disabled={isProcessing}
-                className="h-14 text-base rounded-2xl shadow-md bg-amber-500 hover:bg-amber-600 text-white"
+              <button
+                onClick={() => setStep('DETAILS')}
+                className="text-sm text-amber-600 mb-5 font-bold flex items-center gap-1.5 w-fit hover:text-amber-800 transition-colors"
               >
-                Proceed
-              </Button>
-            </div>
-          </motion.div>
-        )}
+                <ArrowLeft size={16} /> Edit Details
+              </button>
 
-        {step === 'PIN' && (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex flex-col flex-1 h-full w-full"
-          >
-            <button
-              onClick={() => {
-                setStep('CONFIRM');
-                setTransactionPin('');
-                setErrorMessage('');
-              }}
-              className="text-sm text-primary mb-5 font-bold flex items-center gap-1.5 w-fit hover:text-blue-800 transition-colors"
-              disabled={isProcessing}
+              {/* Digital Receipt Card */}
+              <div className="bg-white border border-gray-100 shadow-sm rounded-3xl p-6 text-center mb-6 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber-400 to-amber-600" />
+
+                <p className="text-gray-500 text-sm mb-1 mt-2 font-medium">You are about to pay</p>
+                <h3 className="text-lg font-bold text-gray-900 mb-2 uppercase tracking-wide">{selectedProvider?.name}</h3>
+                <p className="text-amber-600 font-black text-4xl mb-6">₦{Number(amount).toLocaleString()}</p>
+
+                <div className="border-t-2 border-dashed border-gray-100 relative my-6">
+                  <div className="absolute -left-8 -top-3 w-6 h-6 bg-gray-50 rounded-full" />
+                  <div className="absolute -right-8 -top-3 w-6 h-6 bg-gray-50 rounded-full" />
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-500">Customer Name</span>
+                    <span className="font-semibold text-gray-900">{customerName}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-500">Meter Number</span>
+                    <span className="font-mono font-semibold text-gray-900">{meterNumber}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-500">Meter Type</span>
+                    <span className="font-semibold text-gray-900">{meterType}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Anchored Bottom Action */}
+              <div className="mt-auto pt-4 shrink-0">
+                <Button
+                  fullWidth
+                  onClick={() => setStep('PIN')}
+                  disabled={isProcessing}
+                  className="h-14 text-base rounded-2xl shadow-md bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  Proceed
+                </Button>
+              </div>
+            </motion.div>
+          )
+        }
+
+        {
+          step === 'PIN' && (
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex flex-col flex-1 h-full w-full"
             >
-              <ArrowLeft size={16} /> Back
-            </button>
-
-            <div className="flex-1 flex flex-col items-center justify-center -mt-10">
-              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
-                <Lock size={28} />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Enter Transaction PIN</h3>
-              <p className="text-sm text-slate-500 mb-8 text-center px-4">
-                Please enter your 4-digit PIN to authorize this payment of <span className="font-bold text-slate-700">₦{Number(amount).toLocaleString()}</span>
-              </p>
-
-              <PinInput
-                length={4}
-                value={transactionPin}
-                onChange={(val) => {
-                  setTransactionPin(val);
-                  if (errorMessage) setErrorMessage('');
+              <button
+                onClick={() => {
+                  setStep('CONFIRM');
+                  setTransactionPin('');
+                  setErrorMessage('');
                 }}
-                onComplete={(val) => {
-                  handlePurchase(val);
-                }}
+                className="text-sm text-primary mb-5 font-bold flex items-center gap-1.5 w-fit hover:text-blue-800 transition-colors"
                 disabled={isProcessing}
-                error={errorMessage}
-              />
-            </div>
-
-            {/* Anchored Bottom Action */}
-            <div className="mt-auto pt-4 shrink-0">
-              <Button
-                fullWidth
-                onClick={() => handlePurchase(transactionPin)}
-                disabled={isProcessing || transactionPin.length !== 4}
-                className="h-14 text-base rounded-2xl shadow-md bg-amber-500 hover:bg-amber-600 text-white"
               >
-                {isProcessing ? (
-                  <span className="flex items-center gap-2 justify-center">
-                    <Loader2 size={20} className="animate-spin" /> Verifying...
-                  </span>
-                ) : (
-                  'Confirm PIN'
-                )}
-              </Button>
-            </div>
-          </motion.div>
-        )}
+                <ArrowLeft size={16} /> Back
+              </button>
+
+              <div className="flex-1 flex flex-col items-center justify-center -mt-10">
+                <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
+                  <Lock size={28} />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Enter Transaction PIN</h3>
+                <p className="text-sm text-slate-500 mb-8 text-center px-4">
+                  Please enter your 4-digit PIN to authorize this payment of <span className="font-bold text-slate-700">₦{Number(amount).toLocaleString()}</span>
+                </p>
+
+                <PinInput
+                  length={4}
+                  value={transactionPin}
+                  onChange={(val) => {
+                    setTransactionPin(val);
+                    if (errorMessage) setErrorMessage('');
+                  }}
+                  onComplete={(val) => {
+                    handlePurchase(val);
+                  }}
+                  disabled={isProcessing}
+                  error={errorMessage}
+                />
+              </div>
+
+              {/* Anchored Bottom Action */}
+              <div className="mt-auto pt-4 shrink-0">
+                <Button
+                  fullWidth
+                  onClick={() => handlePurchase(transactionPin)}
+                  disabled={isProcessing || transactionPin.length !== 4}
+                  className="h-14 text-base rounded-2xl shadow-md bg-amber-500 hover:bg-amber-600 text-white"
+                >
+                  {isProcessing ? (
+                    <span className="flex items-center gap-2 justify-center">
+                      <Loader2 size={20} className="animate-spin" /> Verifying...
+                    </span>
+                  ) : (
+                    'Confirm PIN'
+                  )}
+                </Button>
+              </div>
+            </motion.div>
+          )
+        }
 
         {/* STEP 4: SUCCESS */}
-        {step === 'SUCCESS' && (
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="flex flex-col items-center justify-center flex-1 h-full w-full text-center pb-8"
-          >
-            <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mb-6 text-green-500 shadow-[0_0_30px_rgba(34,197,94,0.15)] ring-8 ring-green-50/50">
-              <CheckCircle size={56} strokeWidth={2.5} />
-            </div>
-            <h3 className="text-2xl font-extrabold text-gray-900 mb-2 tracking-tight">Payment Successful!</h3>
-            <p className="text-gray-500 mb-6 text-sm">
-              Your electricity payment has been processed.
-            </p>
-
-            {/* Token Display Card (Only renders if a token exists) */}
-            {generatedToken && (
-              <div className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-6 mb-8">
-                <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-2">Your Token</p>
-                <p className="text-2xl font-mono text-gray-900 font-black tracking-widest break-all">
-                  {generatedToken.match(/.{1,4}/g)?.join('-') || generatedToken}
-                </p>
-                <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-2">Units</p>
-                <p className="text-2xl font-mono text-gray-900 font-black tracking-widest break-all">
-                  {units}
-                </p>
+        {
+          step === 'SUCCESS' && (
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="flex flex-col items-center justify-center flex-1 h-full w-full text-center pb-8"
+            >
+              <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center mb-6 text-green-500 shadow-[0_0_30px_rgba(34,197,94,0.15)] ring-8 ring-green-50/50">
+                <CheckCircle size={56} strokeWidth={2.5} />
               </div>
-            )}
+              <h3 className="text-2xl font-extrabold text-gray-900 mb-2 tracking-tight">Payment Successful!</h3>
+              <p className="text-gray-500 mb-6 text-sm">
+                Your electricity payment has been processed.
+              </p>
 
-            {/* Anchored Bottom Action */}
-            <div className="w-full mt-auto pt-4 shrink-0">
-              <Button variant="secondary" fullWidth onClick={handleClose} className="h-14 text-base rounded-2xl font-bold bg-gray-100 text-gray-700 hover:bg-gray-200">
-                Done
-              </Button>
-            </div>
-          </motion.div>
-        )}
-      </div>
-    </BottomSheet>
+              {/* Token Display Card (Only renders if a token exists) */}
+              {generatedToken && (
+                <div className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-6 mb-8">
+                  <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-2">Your Token</p>
+                  <p className="text-2xl font-mono text-gray-900 font-black tracking-widest break-all">
+                    {generatedToken.match(/.{1,4}/g)?.join('-') || generatedToken}
+                  </p>
+                  <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mb-2">Units</p>
+                  <p className="text-2xl font-mono text-gray-900 font-black tracking-widest break-all">
+                    {units}
+                  </p>
+                </div>
+              )}
+
+              {/* Anchored Bottom Action */}
+              <div className="w-full mt-auto pt-4 shrink-0">
+                <Button variant="secondary" fullWidth onClick={handleClose} className="h-14 text-base rounded-2xl font-bold bg-gray-100 text-gray-700 hover:bg-gray-200">
+                  Done
+                </Button>
+              </div>
+            </motion.div>
+          )
+        }
+      </div >
+    </BottomSheet >
   );
 };
 

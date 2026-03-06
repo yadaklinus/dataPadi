@@ -36,7 +36,6 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
 
   const [providerId, setProviderId] = useState('');
   const [smartCardNumber, setSmartCardNumber] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [selectedPlan, setSelectedPlan] = useState<UIPlan | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -75,7 +74,6 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
     setStep('PROVIDER');
     setProviderId('');
     setSmartCardNumber('');
-    setPhoneNumber('');
     setSelectedPlan(null);
     setSearchQuery('');
     setCustomerName('');
@@ -153,10 +151,6 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
   const handlePurchase = async (pinToUse: string) => {
     if (!selectedPlan) return;
 
-    if (!phoneNumber || phoneNumber.length < 10) {
-      setErrorMessage('Please provide a valid contact phone number');
-      return;
-    }
     if (pinToUse.length !== 4) {
       setErrorMessage("Please enter a valid 4-digit PIN");
       return;
@@ -171,7 +165,6 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
       cableTV: providerId,
       packageCode: selectedPlan.id,
       smartCardNo: smartCardNumber,
-      phoneNo: phoneNumber,
       transactionPin: pinToUse
     });
 
@@ -305,24 +298,9 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
                     </div>
 
                     <div className="pt-2 mb-4 shrink-0">
-                      <Input
-                        label="Contact Phone Number"
-                        placeholder="Required for receipt"
-                        type="tel"
-                        maxLength={11}
-                        value={phoneNumber}
-                        onChange={(e) => {
-                          setPhoneNumber(e.target.value.replace(/\D/g, ''));
-                          setErrorMessage('');
-                        }}
-                        leftIcon={<Phone size={18} className="text-gray-400" />}
-                      />
-                    </div>
-
-                    <div className="pt-2 mb-4 shrink-0">
                       <Button
                         fullWidth
-                        disabled={!selectedPlan || phoneNumber.length < 10}
+                        disabled={!selectedPlan}
                         onClick={() => setStep('CONFIRM')}
                         className="h-14 text-base rounded-2xl shadow-md bg-purple-600 hover:bg-purple-700 text-white"
                       >

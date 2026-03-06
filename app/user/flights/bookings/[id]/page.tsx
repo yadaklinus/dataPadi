@@ -4,11 +4,12 @@ import React, { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { getFlightRequest, selectFlightOption, payForFlight, cancelFlightRequest, FlightPassenger } from '@/app/actions/flight';
 import { format } from 'date-fns';
-import { Loader2, ArrowLeft, Plane, CheckCircle, AlertCircle, Calendar, Download, Wallet, Clock, XCircle } from 'lucide-react';
+import { Loader2, ArrowLeft, Plane, CheckCircle, AlertCircle, Calendar, Download, Wallet, Clock, XCircle, Copy } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import BottomNav from '@/components/layout/BottomNav';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import { useSocket } from '@/components/providers/SocketProvider';
 
 export default function FlightDetailsPage() {
     const router = useRouter();
@@ -22,33 +23,83 @@ export default function FlightDetailsPage() {
     // Screen 3 State
     const [selectedOptionId, setSelectedOptionId] = useState('');
     const [passengers, setPassengers] = useState<FlightPassenger[]>([]);
+    const [formError, setFormError] = useState<string | null>(null);
+
+    // Payment State
+    const [selectedProvider, setSelectedProvider] = useState('MONNIFY');
+    const [paymentInstruction, setPaymentInstruction] = useState<any>(null);
+    const socket = useSocket();
 
     useEffect(() => {
         if (id) fetchRequestDetails();
     }, [id]);
 
+    // Socket Event Listener
+    useEffect(() => {
+        if (!socket || !id) return;
+
+        const handleFlightPayment = (data: any) => {
+            fetchRequestDetails();
+        };
+
+        socket.on("flight_payment_received", handleFlightPayment);
+
+        return () => {
+            socket.off("flight_payment_received", handleFlightPayment);
+        };
+    }, [socket, id]);
+
+    // Fallback Polling when awaiting transfer
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+        if (request?.status === 'QUOTED' && paymentInstruction) {
+            interval = setInterval(() => {
+                fetchRequestDetails();
+            }, 10000);
+        }
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [request?.status, paymentInstruction]);
+
     const fetchRequestDetails = async () => {
         try {
             const res = await getFlightRequest(id as string);
 
-
-
             if (res.success && res.data) {
                 setRequest(res.data);
+
+                if (res.data.status !== 'QUOTED') {
+                    setPaymentInstruction(null);
+                }
 
                 console.log(res)
 
                 // Initialize passenger forms if not already done
                 if (res.data.status === 'OPTIONS_PROVIDED' && passengers.length === 0) {
-                    const totalPassengers = (res.data.adults || 0) + (res.data.children || 0) + (res.data.infants || 0);
-                    const initialPassengers = Array(totalPassengers).fill({
-                        title: 'MR',
-                        firstName: '',
-                        lastName: '',
-                        dateOfBirth: '',
-                        gender: 'MALE'
-                    });
-                    setPassengers(initialPassengers);
+                    const adults = res.data.adults || 0;
+                    const children = res.data.children || 0;
+                    const infants = res.data.infants || 0;
+
+                    const newPassengers: FlightPassenger[] = [];
+
+                    for (let i = 0; i < adults; i++) {
+                        newPassengers.push({
+                            title: 'MR', firstName: '', lastName: '', dateOfBirth: '', gender: 'MALE', category: 'Adult'
+                        });
+                    }
+                    for (let i = 0; i < children; i++) {
+                        newPassengers.push({
+                            title: 'MSTR', firstName: '', lastName: '', dateOfBirth: '', gender: 'MALE', category: 'Child'
+                        });
+                    }
+                    for (let i = 0; i < infants; i++) {
+                        newPassengers.push({
+                            title: 'MSTR', firstName: '', lastName: '', dateOfBirth: '', gender: 'MALE', category: 'Infant'
+                        });
+                    }
+
+                    setPassengers(newPassengers);
                 }
             } else {
                 toast.error(res.error || 'Failed to open request');
@@ -68,6 +119,7 @@ export default function FlightDetailsPage() {
     };
 
     const handleSelectOption = async () => {
+        setFormError(null);
         if (!selectedOptionId) {
             toast.error('Please select a flight option');
             return;
@@ -96,9 +148,11 @@ export default function FlightDetailsPage() {
                 toast.success('Details submitted successfully!');
                 fetchRequestDetails(); // Re-fetch to get updated state
             } else {
-                toast.error(res.error || 'Failed to submit selection');
+                setFormError(res.error || 'Failed to submit selection');
+                toast.error('Please check the highlighted errors');
             }
         } catch (error) {
+            setFormError('An error occurred while submitting.');
             toast.error('An error occurred while submitting.');
         } finally {
             setIsSubmitting(false);
@@ -108,10 +162,15 @@ export default function FlightDetailsPage() {
     const handlePayment = async () => {
         setIsSubmitting(true);
         try {
-            const res = await payForFlight(id as string);
+            const res = await payForFlight(id as string, selectedProvider);
             if (res.success) {
-                toast.success('Payment successful! Processing your ticket.');
-                fetchRequestDetails();
+                if (res.data?.paymentInstruction) {
+                    setPaymentInstruction(res.data.paymentInstruction);
+                    toast.success(res.message || 'Payment instructions generated.');
+                } else {
+                    toast.success('Payment successful! Processing your ticket.');
+                    fetchRequestDetails();
+                }
             } else {
                 toast.error(res.error || 'Payment failed.');
             }
@@ -249,8 +308,9 @@ export default function FlightDetailsPage() {
 
                             <div className="space-y-4">
                                 {request.flightOptions?.map((opt: any) => (
-                                    <label
+                                    <div
                                         key={opt.id}
+                                        onClick={() => setSelectedOptionId(opt.id)}
                                         className={`group flex items-center gap-5 p-5 rounded-3xl border cursor-pointer transition-all duration-300 ${selectedOptionId === opt.id ? 'border-slate-800 bg-slate-50' : 'border-slate-100 hover:border-slate-300 hover:bg-slate-50/50'}`}
                                     >
                                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${selectedOptionId === opt.id ? 'border-slate-800' : 'border-slate-300 group-hover:border-slate-400'}`}>
@@ -267,7 +327,7 @@ export default function FlightDetailsPage() {
                                                 <span>{opt.time || opt.timingInfo || 'Timing provided upon ticketing'}</span>
                                             </div>
                                         </div>
-                                    </label>
+                                    </div>
                                 ))}
                             </div>
                         </div>
@@ -285,7 +345,14 @@ export default function FlightDetailsPage() {
                                     {passengers.map((p, idx) => (
                                         <div key={idx} className="relative">
                                             {idx > 0 && <div className="absolute -top-4 w-full h-px bg-slate-100" />}
-                                            <h5 className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-5">Passenger {idx + 1}</h5>
+                                            <div className="flex items-center gap-3 mb-5">
+                                                <h5 className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase">Passenger {idx + 1}</h5>
+                                                {p.category && (
+                                                    <span className={`px-2.5 py-1 text-[10px] font-bold tracking-wider uppercase rounded-full ${p.category === 'Adult' ? 'bg-blue-50 text-blue-600 border border-blue-100' : p.category === 'Child' ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
+                                                        {p.category}
+                                                    </span>
+                                                )}
+                                            </div>
 
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div className="col-span-2 sm:col-span-1">
@@ -347,6 +414,15 @@ export default function FlightDetailsPage() {
                                     ))}
                                 </div>
 
+                                {formError && (
+                                    <div className="mt-6 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3 text-left w-full">
+                                        <AlertCircle className="text-red-600 shrink-0 mt-0.5" size={18} />
+                                        <p className="text-red-800 text-sm font-medium leading-relaxed">
+                                            {formError}
+                                        </p>
+                                    </div>
+                                )}
+
                                 <Button
                                     onClick={handleSelectOption}
                                     disabled={isSubmitting}
@@ -363,40 +439,122 @@ export default function FlightDetailsPage() {
                 {/* Quoted State */}
                 {request.status === 'QUOTED' && (
                     <div className="space-y-6">
-                        <div className="bg-white p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-slate-100 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-3xl -z-10 opacity-60 translate-x-1/2 -translate-y-1/2" />
+                        {paymentInstruction ? (
+                            <div className="bg-white p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-slate-100 relative overflow-hidden flex flex-col items-center">
+                                <div className="absolute top-0 left-0 w-64 h-64 bg-slate-50 rounded-full blur-3xl -z-10 opacity-60 -translate-x-1/2 -translate-y-1/2" />
 
-                            <div className="flex flex-col items-center text-center mb-8">
                                 <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-5 border border-slate-100 shadow-sm">
                                     <Clock className="text-slate-800" size={28} />
                                 </div>
-                                <h3 className="text-slate-900 font-semibold text-2xl tracking-tight mb-2">Secure Your Seat</h3>
-                                <p className="text-slate-500 text-sm max-w-sm leading-relaxed">
-                                    Your premium seat is temporarily held. Please complete payment within 30 minutes to confirm your reservation.
+                                <h3 className="text-slate-900 font-semibold text-2xl tracking-tight mb-2">Transfer Instructions</h3>
+                                <p className="text-slate-500 text-sm max-w-sm text-center leading-relaxed">
+                                    Please transfer the exact amount to the account below. Your booking will automatically continue once payment is received.
                                 </p>
-                            </div>
 
-                            <div className="bg-slate-50/80 rounded-2xl p-6 border border-slate-100 mb-8 backdrop-blur-sm">
-                                <div className="flex justify-between items-center mb-4">
-                                    <span className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]">Airline</span>
-                                    <span className="text-slate-900 font-semibold">{request.airlineName || 'Selected Airline'}</span>
+                                <div className="w-full bg-slate-50/80 rounded-2xl p-6 border border-slate-100 my-8 backdrop-blur-sm space-y-4 text-left">
+                                    <div>
+                                        <span className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em] block mb-1">Bank Name</span>
+                                        <span className="text-slate-900 font-semibold text-lg">{paymentInstruction.bank_name}</span>
+                                    </div>
+                                    <div className="w-full h-px bg-slate-200/60" />
+                                    <div>
+                                        <span className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em] block mb-1">Account Number</span>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-slate-900 font-mono font-medium text-2xl tracking-wider">{paymentInstruction.account_number}</span>
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(paymentInstruction.account_number);
+                                                    toast.success('Account number copied!');
+                                                }}
+                                                className="p-2 bg-slate-200/50 hover:bg-slate-200 rounded-lg transition-colors text-slate-700"
+                                            >
+                                                <Copy size={18} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div className="w-full h-px bg-slate-200/60" />
+                                    <div>
+                                        <span className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em] block mb-1">Account Name</span>
+                                        <span className="text-slate-900 font-semibold text-lg">{paymentInstruction.account_name}</span>
+                                    </div>
+                                    <div className="w-full h-px bg-slate-200/60" />
+                                    <div>
+                                        <span className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em] block mb-1">Amount to Pay</span>
+                                        <span className="text-slate-900 font-light text-3xl tracking-tight">₦{Number(paymentInstruction.amount).toLocaleString()}</span>
+                                    </div>
                                 </div>
-                                <div className="w-full h-px bg-slate-200/60 my-4" />
-                                <div className="flex justify-between items-end">
-                                    <span className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5">Total Amount</span>
-                                    <span className="text-slate-900 font-light text-3xl tracking-tight">₦{Number(request.sellingPrice || 0).toLocaleString()}</span>
+
+                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3 text-left w-full mb-6">
+                                    <AlertCircle className="text-amber-600 shrink-0 mt-0.5" size={18} />
+                                    <p className="text-amber-800 text-xs font-medium leading-relaxed">
+                                        This account is strictly for this specific flight booking and will expire. Do not save this account or use it for future bookings.
+                                    </p>
+                                </div>
+
+                                <div className="flex items-center justify-center gap-2 text-slate-500 text-xs font-medium uppercase tracking-widest">
+                                    <Loader2 size={14} className="animate-spin" /> Awaiting Payment...
                                 </div>
                             </div>
+                        ) : (
+                            <div className="bg-white p-8 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-slate-100 relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-slate-50 rounded-full blur-3xl -z-10 opacity-60 translate-x-1/2 -translate-y-1/2" />
 
-                            <Button
-                                onClick={handlePayment}
-                                disabled={isSubmitting}
-                                className="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-900/20 text-base font-semibold tracking-wide flex justify-center items-center gap-3 rounded-xl transition-all duration-300"
-                            >
-                                {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <Wallet size={20} />}
-                                Pay Securely
-                            </Button>
-                        </div>
+                                <div className="flex flex-col items-center text-center mb-8">
+                                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-5 border border-slate-100 shadow-sm">
+                                        <Clock className="text-slate-800" size={28} />
+                                    </div>
+                                    <h3 className="text-slate-900 font-semibold text-2xl tracking-tight mb-2">Secure Your Seat</h3>
+                                    <p className="text-slate-500 text-sm max-w-sm leading-relaxed">
+                                        Your premium seat is temporarily held. Please complete payment within 30 minutes to confirm your reservation.
+                                    </p>
+                                </div>
+
+                                <div className="bg-slate-50/80 rounded-2xl p-6 border border-slate-100 mb-6 backdrop-blur-sm">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <span className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em]">Airline</span>
+                                        <span className="text-slate-900 font-semibold">{request.airlineName || 'Selected Airline'}</span>
+                                    </div>
+                                    <div className="w-full h-px bg-slate-200/60 my-4" />
+                                    <div className="flex justify-between items-end">
+                                        <span className="text-slate-500 text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5">Total Amount</span>
+                                        <span className="text-slate-900 font-light text-3xl tracking-tight">₦{Number(request.sellingPrice || 0).toLocaleString()}</span>
+                                    </div>
+                                </div>
+
+                                <div className="mb-8">
+                                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3 block">Payment Provider</label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            onClick={() => setSelectedProvider('MONNIFY')}
+                                            className={`p-4 border rounded-xl flex flex-col items-center justify-center gap-2 transition-all ${selectedProvider === 'MONNIFY' ? 'border-slate-800 bg-slate-50 ring-1 ring-slate-800' : 'border-slate-200 hover:border-slate-300'}`}
+                                        >
+                                            <div className="w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center">
+                                                {selectedProvider === 'MONNIFY' && <div className="w-3 h-3 bg-slate-800 rounded-full" />}
+                                            </div>
+                                            <span className="font-semibold text-sm text-slate-800 tracking-tight">Monnify</span>
+                                        </button>
+                                        <button
+                                            onClick={() => setSelectedProvider('FLUTTERWAVE')}
+                                            className={`p-4 border rounded-xl flex flex-col items-center justify-center gap-2 transition-all ${selectedProvider === 'FLUTTERWAVE' ? 'border-slate-800 bg-slate-50 ring-1 ring-slate-800' : 'border-slate-200 hover:border-slate-300'}`}
+                                        >
+                                            <div className="w-5 h-5 rounded-full border border-slate-300 flex items-center justify-center">
+                                                {selectedProvider === 'FLUTTERWAVE' && <div className="w-3 h-3 bg-slate-800 rounded-full" />}
+                                            </div>
+                                            <span className="font-semibold text-sm text-slate-800 tracking-tight">Flutterwave</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <Button
+                                    onClick={handlePayment}
+                                    disabled={isSubmitting}
+                                    className="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white shadow-xl shadow-slate-900/20 text-base font-semibold tracking-wide flex justify-center items-center gap-3 rounded-xl transition-all duration-300"
+                                >
+                                    {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <Wallet size={20} />}
+                                    Generate Account
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 )}
 

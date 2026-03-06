@@ -20,6 +20,7 @@ export interface FlightPassenger {
     lastName: string;
     dateOfBirth: string; // ISO string format
     gender: 'MALE' | 'FEMALE';
+    category?: 'Adult' | 'Child' | 'Infant';
 }
 
 export interface FlightSelectionPayload {
@@ -84,11 +85,11 @@ export async function selectFlightOption(requestId: string, payload: FlightSelec
 /**
  * Screen 4: User pays for the flight
  */
-export async function payForFlight(requestId: string) {
+export async function payForFlight(requestId: string, provider: string) {
     try {
         const response = await authorizedFetch(`/api/v1/flights/user/${requestId}/pay`, {
             method: 'POST',
-            body: JSON.stringify({}),
+            body: JSON.stringify({ provider }),
         });
 
         const result = await response.json();
