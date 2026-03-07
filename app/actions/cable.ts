@@ -22,7 +22,6 @@ export interface CablePaymentPayload {
   cableTV: string;
   packageCode: string;
   smartCardNo: string;
-  phoneNo: string;
   transactionPin: string;
 }
 
