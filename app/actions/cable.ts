@@ -67,7 +67,8 @@ export async function verifySmartCard(cableTV: string, smartCardNo: string) {
     return {
       success: true,
       // Handle potential API key variations for customer name
-      customerName: result.data["customer name"] || result.data["customer_name"] || 'Unknown Customer'
+      customerName: result.data["customer name"] || result.data["customer_name"] || 'Unknown Customer',
+      dueDate: result.data["due_date"] || result.data["dueDate"] || result.data["Due Date"] || 'N/A'
     };
   } catch (error) {
     console.error('Smartcard Verification Error:', error);

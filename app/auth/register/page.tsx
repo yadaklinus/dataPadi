@@ -9,11 +9,13 @@ import { registerUser } from '@/app/actions/auth/register';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import PinInput from '@/components/ui/PinInput';
+import Checkbox from '@/components/ui/Checkbox';
 
 export default function Register() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [transactionPin, setTransactionPin] = useState('');
@@ -25,6 +27,21 @@ export default function Register() {
     setSuccess(null);
 
     const formData = new FormData(e.currentTarget);
+    const password = formData.get('password') as string;
+    const confirmPassword = formData.get('confirmPassword') as string;
+    const termsAccepted = formData.get('termsAccepted') === 'on';
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      setIsLoading(false);
+      return;
+    }
+
+    if (!termsAccepted) {
+      setError('Please accept the terms and conditions');
+      setIsLoading(false);
+      return;
+    }
 
     if (transactionPin.length !== 4) {
       setError('Please enter a 4-digit transaction PIN');
@@ -140,6 +157,25 @@ export default function Register() {
               className="[&>input]:rounded-2xl"
             />
 
+            <Input
+              name="confirmPassword"
+              label="Confirm Password"
+              placeholder="••••••••"
+              type={showConfirmPassword ? "text" : "password"}
+              required
+              leftIcon={<Lock size={18} />}
+              rightIcon={
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="text-slate-400 hover:text-blue-600 transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              }
+              className="[&>input]:rounded-2xl"
+            />
+
             <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
               <div className="mb-4 text-center">
                 <h3 className="text-sm font-bold text-slate-900 mb-1">Set Transaction PIN</h3>
@@ -159,6 +195,23 @@ export default function Register() {
                 />
               </div>
             </div>
+
+            <Checkbox
+              name="termsAccepted"
+              required
+              label={
+                <span>
+                  I agree to the{' '}
+                  <Link href="/terms" className="text-blue-600 hover:underline">
+                    Terms & Conditions
+                  </Link>{' '}
+                  and{' '}
+                  <Link href="/privacy" className="text-blue-600 hover:underline">
+                    Privacy Policy
+                  </Link>
+                </span>
+              }
+            />
 
             <Button
               type="submit"

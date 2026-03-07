@@ -169,7 +169,7 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
                 onClick={handleFundWithCard}
                 className="w-full bg-white text-blue-700 h-14 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-gray-50 active:scale-95 transition-all shadow-md"
               >
-                {isFunding ? 'Processing...' : <><ExternalLink size={18} /> Pay with Flutterwave</>}
+                {isFunding ? 'Processing...' : <><ExternalLink size={18} /> Fund Account</>}
               </button>
             </div>
           )}
