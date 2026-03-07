@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Eye, EyeOff, Plus, Smartphone, Wifi, Zap, Tv,
   TrendingUp, CreditCard, Receipt, ChevronRight, GraduationCap
@@ -9,7 +9,7 @@ import { CURRENCY } from '@/constants';
 import BuyDataModal from '@/components/modals/BuyDataModal';
 import BuyAirtimeModal from '@/components/modals/BuyAirtimeModal';
 import { motion } from 'framer-motion';
-import { DashboardData } from '@/app/actions/dashboard';
+import { DashboardData, getDashboardData } from '@/app/actions/dashboard';
 import BuyElectricityModal from './modals/BuyElectrictyModal';
 import BuyCableModal from './modals/BuyCableModal';
 import BuyEducationModal from './modals/BuyEducationModal';
@@ -33,7 +33,7 @@ const getIconConfig = (type: string) => {
 };
 
 const Dashboard: React.FC<DashboardProps> = ({ initialData }) => {
-  const [data] = useState<DashboardData>(initialData);
+  const [data, setData] = useState<DashboardData>(initialData);
   const [showBalance, setShowBalance] = useState(true);
   const [isBuyDataOpen, setIsBuyDataOpen] = useState(false);
   const [isBuyAirtimeOpen, setIsBuyAirtimeOpen] = useState(false);
@@ -42,6 +42,18 @@ const Dashboard: React.FC<DashboardProps> = ({ initialData }) => {
   const [isBuyEducationOpen, setIsBuyEducationOpen] = useState(false);
 
   const router = useRouter();
+
+  // Re-sync with initialData if it changes from parent
+  useEffect(() => {
+    setData(initialData);
+  }, [initialData]);
+
+  const refreshDashboard = async () => {
+    const result = await getDashboardData();
+    if (result.success && result.data) {
+      setData(result.data);
+    }
+  };
 
   // Modernized Quick Actions: Light backgrounds with colored icons
   const quickActions = [
@@ -178,11 +190,11 @@ const Dashboard: React.FC<DashboardProps> = ({ initialData }) => {
         )}
       </div>
 
-      <BuyDataModal isOpen={isBuyDataOpen} onClose={() => setIsBuyDataOpen(false)} />
-      <BuyAirtimeModal isOpen={isBuyAirtimeOpen} onClose={() => setIsBuyAirtimeOpen(false)} />
-      <BuyElectricityModal isOpen={isBuyElectrictyOpen} onClose={() => setIsBuyElectrictyOpen(false)} />
-      <BuyCableModal isOpen={isBuyCableTV} onClose={() => setIsBuyCableTV(false)} />
-      <BuyEducationModal isOpen={isBuyEducationOpen} onClose={() => setIsBuyEducationOpen(false)} />
+      <BuyDataModal isOpen={isBuyDataOpen} onClose={() => setIsBuyDataOpen(false)} onRefresh={refreshDashboard} />
+      <BuyAirtimeModal isOpen={isBuyAirtimeOpen} onClose={() => setIsBuyAirtimeOpen(false)} onRefresh={refreshDashboard} />
+      <BuyElectricityModal isOpen={isBuyElectrictyOpen} onClose={() => setIsBuyElectrictyOpen(false)} onRefresh={refreshDashboard} />
+      <BuyCableModal isOpen={isBuyCableTV} onClose={() => setIsBuyCableTV(false)} onRefresh={refreshDashboard} />
+      <BuyEducationModal isOpen={isBuyEducationOpen} onClose={() => setIsBuyEducationOpen(false)} onRefresh={refreshDashboard} />
     </div>
   );
 };

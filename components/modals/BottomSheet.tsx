@@ -1,16 +1,17 @@
 "use client"
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, ArrowLeft } from 'lucide-react';
 
 interface BottomSheetProps {
   isOpen: boolean;
   onClose: () => void;
+  onBack?: () => void;
   children: React.ReactNode;
   title?: string;
 }
 
-const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, children, title }) => {
+const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, onBack, children, title }) => {
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
@@ -33,7 +34,7 @@ const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, children, ti
             onClick={onClose}
             className="fixed inset-0 bg-black/30 backdrop-blur-[4px] z-[60]"
           />
-          
+
           {/* Modal Container */}
           <div className="fixed inset-0 flex items-end justify-center z-[70] pointer-events-none">
             <motion.div
@@ -62,10 +63,20 @@ const BottomSheet: React.FC<BottomSheetProps> = ({ isOpen, onClose, children, ti
 
               {/* 3. Header Area */}
               <div className="flex justify-between items-center mb-6 relative z-10">
-                <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">{title}</h2>
-                
+                <div className="flex items-center gap-3">
+                  {onBack && (
+                    <button
+                      onClick={onBack}
+                      className="p-2 rounded-full bg-white/40 hover:bg-white/60 backdrop-blur-md border border-white/50 shadow-sm text-gray-600 transition-all active:scale-95"
+                    >
+                      <ArrowLeft size={18} strokeWidth={2.5} />
+                    </button>
+                  )}
+                  <h2 className="text-xl font-extrabold text-gray-900 tracking-tight">{title}</h2>
+                </div>
+
                 {/* Glassy Close Button */}
-                <button 
+                <button
                   onClick={onClose}
                   className="p-2.5 rounded-full bg-white/40 hover:bg-white/60 backdrop-blur-md border border-white/50 shadow-sm text-gray-600 transition-all active:scale-95"
                 >

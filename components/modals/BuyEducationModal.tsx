@@ -12,6 +12,7 @@ import { verifyJambProfile, buyEducationPin } from '@/app/actions/vtu';
 interface BuyEducationModalProps {
     isOpen: boolean;
     onClose: () => void;
+    onRefresh?: () => void;
 }
 
 type Provider = 'WAEC' | 'JAMB' | 'JAMB_MOCK';
@@ -23,7 +24,7 @@ const EDUCATION_PRODUCTS = {
     JAMB_MOCK: { name: 'JAMB UTME (With Mock)', price: 7700, examType: 'utme-mock', icon: GraduationCap },
 };
 
-const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose }) => {
+const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose, onRefresh }) => {
     const [step, setStep] = useState<Step>('PROVIDER');
     const [provider, setProvider] = useState<Provider | null>(null);
 
@@ -131,14 +132,31 @@ const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose }
                 message: result.message // For PENDING: "Connection delay... etc."
             });
             setStep('SUCCESS');
+            if (onRefresh) onRefresh();
         } else {
             setErrorMessage(result.error || 'Transaction failed. Please try again.');
             setTransactionPin('');
         }
     };
 
+    const getOnBack = () => {
+        if (step === 'DETAILS') return () => setStep('PROVIDER');
+        if (step === 'CONFIRM') return () => setStep('DETAILS');
+        if (step === 'PIN') return () => {
+            setStep('CONFIRM');
+            setTransactionPin('');
+            setErrorMessage('');
+        };
+        return undefined;
+    };
+
     return (
-        <BottomSheet isOpen={isOpen} onClose={handleClose} title={step === 'SUCCESS' ? 'Success' : 'Education PINs'}>
+        <BottomSheet
+            isOpen={isOpen}
+            onClose={handleClose}
+            onBack={getOnBack()}
+            title={step === 'SUCCESS' ? 'Transaction Status' : 'Education Payment'}
+        >
             <div className="h-[75svh] w-full flex flex-col">
                 {errorMessage && step !== 'SUCCESS' && (
                     <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-medium mb-4 flex items-center gap-2 border border-red-100">
@@ -152,7 +170,7 @@ const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose }
                         animate={{ opacity: 1, x: 0 }}
                         className="flex flex-col flex-1 h-full w-full"
                     >
-                        <p className="text-textMuted mb-4 text-sm font-medium">Select an Education body</p>
+                        <p className="text-gray-500 mb-4 text-sm font-medium">Select an education service</p>
                         <div className="space-y-4">
                             {(Object.keys(EDUCATION_PRODUCTS) as Provider[]).map((prov) => {
                                 const info = EDUCATION_PRODUCTS[prov];
@@ -183,9 +201,6 @@ const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose }
                         animate={{ opacity: 1, x: 0 }}
                         className="flex flex-col flex-1 h-full w-full"
                     >
-                        <button onClick={() => setStep('PROVIDER')} className="text-sm text-primary mb-4 font-medium flex items-center gap-1 hover:text-primaryDark transition-colors w-fit">
-                            <ArrowLeft size={16} /> Change Provider
-                        </button>
 
                         <div className="flex-1 overflow-y-auto no-scrollbar pb-4 space-y-4">
 
@@ -255,9 +270,6 @@ const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose }
                         animate={{ opacity: 1, x: 0 }}
                         className="flex flex-col flex-1 h-full w-full"
                     >
-                        <button onClick={() => setStep('DETAILS')} className="text-sm text-primary mb-4 font-medium flex items-center gap-1 w-fit">
-                            <ArrowLeft size={16} /> Edit Details
-                        </button>
 
                         <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6 mb-6">
                             <div className="text-center mb-6">
@@ -308,18 +320,6 @@ const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose }
                         animate={{ opacity: 1, x: 0 }}
                         className="flex flex-col flex-1 h-full w-full"
                     >
-                        <button
-                            onClick={() => {
-                                setStep('CONFIRM');
-                                setTransactionPin('');
-                                setErrorMessage('');
-                            }}
-                            className="text-sm text-primary mb-5 font-bold flex items-center gap-1.5 w-fit hover:text-blue-800 transition-colors"
-                            disabled={isPurchasing}
-                        >
-                            <ArrowLeft size={16} /> Back
-                        </button>
-
                         <div className="flex-1 flex flex-col items-center justify-center -mt-10">
                             <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
                                 <Lock size={28} />

@@ -8,6 +8,7 @@ import { initializeGatewayFunding } from '@/app/actions/payment';
 import { logoutUser } from '@/app/actions/auth/logout';
 import KYCModal from '@/components/modals/KYCModal';
 import PaymentModal from '@/components/modals/PaymentModal';
+import ChangePinModal from '@/components/modals/ChangePinModal';
 import { CURRENCY } from '@/constants';
 
 interface ProfileProps {
@@ -41,6 +42,7 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
   const [error, setError] = useState('');
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [paymentLink, setPaymentLink] = useState('');
+  const [isChangePinOpen, setIsChangePinOpen] = useState(false);
 
   const handleCopyAccount = () => {
     const acc = initialUser.kycData?.virtualAccountNumber;
@@ -178,12 +180,15 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
       <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-6">
         <div className="divide-y divide-gray-50">
 
-          <button className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
+          <button
+            onClick={() => setIsChangePinOpen(true)}
+            className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+          >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-600">
                 <Shield size={18} />
               </div>
-              <span className="font-semibold text-gray-800 text-sm">Security & Passwords</span>
+              <span className="font-semibold text-gray-800 text-sm">Change Transaction PIN</span>
             </div>
             <ChevronRight size={18} className="text-gray-400" />
           </button>
@@ -226,6 +231,10 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
         isOpen={isPaymentOpen}
         onClose={() => setIsPaymentOpen(false)}
         url={paymentLink}
+      />
+      <ChangePinModal
+        isOpen={isChangePinOpen}
+        onClose={() => setIsChangePinOpen(false)}
       />
     </div>
   );

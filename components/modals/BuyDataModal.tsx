@@ -14,6 +14,7 @@ import { getDataPlans, buyData, NetworkPlans } from '@/app/actions/vtu';
 interface BuyDataModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onRefresh?: () => void;
 }
 
 interface UIPlan {
@@ -25,7 +26,7 @@ interface UIPlan {
 
 type Step = 'NETWORK' | 'PLAN' | 'PHONE' | 'CONFIRM' | 'PIN' | 'SUCCESS';
 
-const BuyDataModal: React.FC<BuyDataModalProps> = ({ isOpen, onClose }) => {
+const BuyDataModal: React.FC<BuyDataModalProps> = ({ isOpen, onClose, onRefresh }) => {
   const [step, setStep] = useState<Step>('NETWORK');
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkId | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<UIPlan | null>(null);
@@ -148,14 +149,32 @@ const BuyDataModal: React.FC<BuyDataModalProps> = ({ isOpen, onClose }) => {
 
     if (result.success) {
       setStep('SUCCESS');
+      if (onRefresh) onRefresh();
     } else {
       setErrorMessage(result.error || 'Transaction failed. Please try again.');
       setTransactionPin('');
     }
   };
 
+  const getOnBack = () => {
+    if (step === 'PLAN') return () => setStep('NETWORK');
+    if (step === 'PHONE') return () => setStep('PLAN');
+    if (step === 'CONFIRM') return () => setStep('PHONE');
+    if (step === 'PIN') return () => {
+      setStep('CONFIRM');
+      setTransactionPin('');
+      setErrorMessage('');
+    };
+    return undefined;
+  };
+
   return (
-    <BottomSheet isOpen={isOpen} onClose={handleClose} title={step === 'SUCCESS' ? 'Success' : 'Buy Data'}>
+    <BottomSheet
+      isOpen={isOpen}
+      onClose={handleClose}
+      onBack={getOnBack()}
+      title={step === 'SUCCESS' ? 'Success' : 'Buy Data'}
+    >
       {/* 80svh and w-full applied here */}
       <div className="h-[80svh] w-full flex flex-col">
 
@@ -191,10 +210,6 @@ const BuyDataModal: React.FC<BuyDataModalProps> = ({ isOpen, onClose }) => {
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col flex-1 h-full w-full"
           >
-            <button onClick={() => setStep('NETWORK')} className="text-sm text-primary mb-4 font-medium flex items-center gap-1 hover:text-primaryDark transition-colors w-fit">
-              <ArrowLeft size={16} /> Back to Networks
-            </button>
-
             <div className="mb-4">
               <Input
                 placeholder="Search plans (e.g. 1GB)"
@@ -243,10 +258,6 @@ const BuyDataModal: React.FC<BuyDataModalProps> = ({ isOpen, onClose }) => {
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col flex-1 h-full w-full"
           >
-            <button onClick={() => setStep('PLAN')} className="text-sm text-primary mb-4 font-medium flex items-center gap-1 w-fit">
-              <ArrowLeft size={16} /> Change Plan
-            </button>
-
             <div className="bg-blue-50 p-4 rounded-xl mb-6 border border-blue-100">
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-gray-500">Plan</span>
@@ -293,10 +304,6 @@ const BuyDataModal: React.FC<BuyDataModalProps> = ({ isOpen, onClose }) => {
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col flex-1 h-full w-full"
           >
-            <button onClick={() => setStep('PHONE')} className="text-sm text-primary mb-4 font-medium flex items-center gap-1 w-fit">
-              <ArrowLeft size={16} /> Edit Details
-            </button>
-
             <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6 text-center mb-6">
               <p className="text-gray-500 text-sm mb-2">You are about to purchase</p>
               <h3 className="text-xl font-bold text-gray-900 mb-1">{selectedPlan?.name}</h3>
@@ -328,18 +335,6 @@ const BuyDataModal: React.FC<BuyDataModalProps> = ({ isOpen, onClose }) => {
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col flex-1 h-full w-full"
           >
-            <button
-              onClick={() => {
-                setStep('CONFIRM');
-                setTransactionPin('');
-                setErrorMessage('');
-              }}
-              className="text-sm text-primary mb-5 font-bold flex items-center gap-1.5 w-fit hover:text-blue-800 transition-colors"
-              disabled={isPurchasing}
-            >
-              <ArrowLeft size={16} /> Back
-            </button>
-
             <div className="flex-1 flex flex-col items-center justify-center -mt-10">
               <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
                 <Lock size={28} />

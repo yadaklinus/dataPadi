@@ -14,13 +14,14 @@ import { buyAirtime } from '@/app/actions/vtu';
 interface BuyAirtimeModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onRefresh?: () => void;
 }
 
 type Step = 'NETWORK' | 'DETAILS' | 'CONFIRM' | 'PIN' | 'SUCCESS';
 
 const QUICK_AMOUNTS = ['100', '200', '500', '1000'];
 
-const BuyAirtimeModal: React.FC<BuyAirtimeModalProps> = ({ isOpen, onClose }) => {
+const BuyAirtimeModal: React.FC<BuyAirtimeModalProps> = ({ isOpen, onClose, onRefresh }) => {
   const [step, setStep] = useState<Step>('NETWORK');
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkId | null>(null);
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -72,6 +73,7 @@ const BuyAirtimeModal: React.FC<BuyAirtimeModalProps> = ({ isOpen, onClose }) =>
 
       if (result.success) {
         setStep('SUCCESS');
+        if (onRefresh) onRefresh();
       } else {
         setErrorMessage(result.error || 'Transaction failed. Please try again.');
         setTransactionPin(''); // clear input so user can try again easily
@@ -84,8 +86,24 @@ const BuyAirtimeModal: React.FC<BuyAirtimeModalProps> = ({ isOpen, onClose }) =>
     }
   };
 
+  const getOnBack = () => {
+    if (step === 'DETAILS') return () => setStep('NETWORK');
+    if (step === 'CONFIRM') return () => setStep('DETAILS');
+    if (step === 'PIN') return () => {
+      setStep('CONFIRM');
+      setTransactionPin('');
+      setErrorMessage('');
+    };
+    return undefined;
+  };
+
   return (
-    <BottomSheet isOpen={isOpen} onClose={handleClose} title={step === 'SUCCESS' ? 'Transaction Status' : 'Buy Airtime'}>
+    <BottomSheet
+      isOpen={isOpen}
+      onClose={handleClose}
+      onBack={getOnBack()}
+      title={step === 'SUCCESS' ? 'Transaction Status' : 'Buy Airtime'}
+    >
       {/* h-full and flex-1 allows this container to take all the height the BottomSheet provides. 
         pb-safe ensures it doesn't clip into mobile home bars.
       */}
@@ -113,22 +131,13 @@ const BuyAirtimeModal: React.FC<BuyAirtimeModalProps> = ({ isOpen, onClose }) =>
           </motion.div>
         )}
 
-        {/* STEP 2: DETAILS */}
         {step === 'DETAILS' && (
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col flex-1 h-full w-full"
           >
-            <button
-              onClick={() => setStep('NETWORK')}
-              className="text-sm text-primary mb-5 font-bold flex items-center gap-1.5 w-fit hover:text-blue-800 transition-colors"
-            >
-              <ArrowLeft size={16} /> Change Network
-            </button>
-
             <div className="space-y-5 overflow-y-auto no-scrollbar flex-1 pb-4">
-
               {/* Phone Input Area */}
               <div className="space-y-1">
                 <Input
@@ -200,14 +209,6 @@ const BuyAirtimeModal: React.FC<BuyAirtimeModalProps> = ({ isOpen, onClose }) =>
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col flex-1 h-full w-full"
           >
-            <button
-              onClick={() => setStep('DETAILS')}
-              className="text-sm text-primary mb-5 font-bold flex items-center gap-1.5 w-fit hover:text-blue-800 transition-colors"
-            >
-              <ArrowLeft size={16} /> Edit Details
-            </button>
-
-            {/* Digital Receipt Card */}
             <div className="bg-white border border-gray-100 shadow-sm rounded-3xl p-6 text-center mb-6 relative overflow-hidden">
               {/* Top Accent line */}
               <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-500 to-primary" />
@@ -249,18 +250,6 @@ const BuyAirtimeModal: React.FC<BuyAirtimeModalProps> = ({ isOpen, onClose }) =>
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col flex-1 h-full w-full"
           >
-            <button
-              onClick={() => {
-                setStep('CONFIRM');
-                setTransactionPin('');
-                setErrorMessage('');
-              }}
-              className="text-sm text-primary mb-5 font-bold flex items-center gap-1.5 w-fit hover:text-blue-800 transition-colors"
-              disabled={isLoading}
-            >
-              <ArrowLeft size={16} /> Back
-            </button>
-
             <div className="flex-1 flex flex-col items-center justify-center -mt-10">
               <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
                 <Lock size={28} />

@@ -11,6 +11,7 @@ import { getCablePackages, verifySmartCard, payCableSubscription, CablePackagesR
 interface BuyCableModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onRefresh?: () => void;
 }
 
 type Step = 'PROVIDER' | 'DETAILS' | 'CONFIRM' | 'PIN' | 'SUCCESS';
@@ -25,11 +26,10 @@ interface UIPlan {
 const CABLE_PROVIDERS = [
   { id: 'dstv', name: 'DStv', theme: 'text-blue-600 bg-blue-100', activeTheme: 'active:bg-blue-50 active:border-blue-200' },
   { id: 'gotv', name: 'GOtv', theme: 'text-green-600 bg-green-100', activeTheme: 'active:bg-green-50 active:border-green-200' },
-  { id: 'startimes', name: 'StarTimes', theme: 'text-orange-600 bg-orange-100', activeTheme: 'active:bg-orange-50 active:border-orange-200' },
-  { id: 'showmax', name: 'Showmax', theme: 'text-purple-600 bg-purple-100', activeTheme: 'active:bg-purple-50 active:border-purple-200' }
+  { id: 'startimes', name: 'StarTimes', theme: 'text-orange-600 bg-orange-100', activeTheme: 'active:bg-orange-50 active:border-orange-200' }
 ];
 
-const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
+const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose, onRefresh }) => {
   // States
   const [step, setStep] = useState<Step>('PROVIDER');
   const [apiPackages, setApiPackages] = useState<CablePackagesResponse | null>(null);
@@ -141,6 +141,7 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
     });
 
     return flatPlans;
+
   };
 
   const availablePlans = getAvailablePlans();
@@ -172,14 +173,31 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
 
     if (res.success) {
       setStep('SUCCESS');
+      if (onRefresh) onRefresh();
     } else {
       setErrorMessage(res.error || 'Transaction failed. Please try again.');
       setTransactionPin('');
     }
   };
 
+  const getOnBack = () => {
+    if (step === 'DETAILS') return () => setStep('PROVIDER');
+    if (step === 'CONFIRM') return () => setStep('DETAILS');
+    if (step === 'PIN') return () => {
+      setStep('CONFIRM');
+      setTransactionPin('');
+      setErrorMessage('');
+    };
+    return undefined;
+  };
+
   return (
-    <BottomSheet isOpen={isOpen} onClose={handleClose} title={step === 'SUCCESS' ? 'Transaction Status' : 'Cable Subscription'}>
+    <BottomSheet
+      isOpen={isOpen}
+      onClose={handleClose}
+      onBack={getOnBack()}
+      title={step === 'SUCCESS' ? 'Transaction Status' : 'Cable Subscription'}
+    >
       <div className="h-[85svh] w-full flex flex-col flex-1 pb-4">
 
         {/* Global Error Banner */}
@@ -233,12 +251,7 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col flex-1 h-full w-full"
           >
-            <button
-              onClick={() => setStep('PROVIDER')}
-              className="text-sm text-purple-600 mb-5 font-bold flex items-center gap-1.5 w-fit hover:text-purple-800 transition-colors"
-            >
-              <ArrowLeft size={16} /> Change Provider
-            </button>
+            <p className="text-gray-500 mb-4 text-sm font-medium">Select your cable provider</p>
 
             <div className="space-y-5 overflow-y-auto no-scrollbar flex-1 pb-4 flex flex-col">
 
@@ -344,12 +357,7 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col flex-1 h-full w-full"
           >
-            <button
-              onClick={() => setStep('DETAILS')}
-              className="text-sm text-purple-600 mb-5 font-bold flex items-center gap-1.5 w-fit hover:text-purple-800 transition-colors"
-            >
-              <ArrowLeft size={16} /> Edit Details
-            </button>
+            {/* Digital Receipt Card */}
 
             {/* Digital Receipt Card */}
             <div className="bg-white border border-gray-100 shadow-sm rounded-3xl p-6 text-center mb-6 relative overflow-hidden">
@@ -400,18 +408,6 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose }) => {
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col flex-1 h-full w-full"
           >
-            <button
-              onClick={() => {
-                setStep('CONFIRM');
-                setTransactionPin('');
-                setErrorMessage('');
-              }}
-              className="text-sm text-primary mb-5 font-bold flex items-center gap-1.5 w-fit hover:text-blue-800 transition-colors"
-              disabled={isProcessing}
-            >
-              <ArrowLeft size={16} /> Back
-            </button>
-
             <div className="flex-1 flex flex-col items-center justify-center -mt-10">
               <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
                 <Lock size={28} />
