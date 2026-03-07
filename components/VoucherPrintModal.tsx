@@ -29,18 +29,16 @@ export const VoucherPrintModal = ({ pinsToPrint, onClose }: { pinsToPrint: any[]
         onclone: (clonedDoc) => {
           const el = clonedDoc.getElementById('voucher-print-area');
           if (el) {
-            // Force reset variables that might use oklch/lab
             el.style.setProperty('--background', '#ffffff', 'important');
             el.style.setProperty('--foreground', '#000000', 'important');
             el.style.setProperty('--primary', '#000000', 'important');
             el.style.setProperty('--card', '#ffffff', 'important');
             el.style.setProperty('--border', '#cccccc', 'important');
 
-            // Also sanitize all children just in case
             const allElements = el.getElementsByTagName('*');
             for (let i = 0; i < allElements.length; i++) {
               const element = allElements[i] as HTMLElement;
-              element.style.borderColor = '#cccccc'; // Avoid oklch borders
+              element.style.borderColor = '#cccccc';
             }
           }
         }
@@ -74,16 +72,20 @@ export const VoucherPrintModal = ({ pinsToPrint, onClose }: { pinsToPrint: any[]
     }
   };
 
-  const getNetworkConfig = (network: string) => {
-    const net = network.toUpperCase();
-    switch (net) {
-      case 'MTN': return { color: '#FFCC00', text: 'MTN', textColor: 'text-black' };
-      case 'AIRTEL': return { color: '#FF0000', text: 'AIRTEL', textColor: 'text-white' };
-      case 'GLO': return { color: '#1ab31a', text: 'GLO', textColor: 'text-white' };
-      case '9MOBILE': return { color: '#006400', text: '9MOBILE', textColor: 'text-white' };
-      default: return { color: '#2563eb', text: net, textColor: 'text-white' };
+  const getUSSD = (networkId: string) => {
+    switch (networkId?.toUpperCase()) {
+      case 'MTN': return '*555*PIN#';
+      case 'AIRTEL': return '*126*PIN#';
+      case 'GLO': return '*123*PIN#';
+      case '9MOBILE': return '*222*PIN#';
+      default: return '*XXX*PIN#';
     }
   };
+
+  const formatPin = (pin: string) => {
+    if (!pin) return 'No Pins available';
+    return pin.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
+  }
 
   return (
     <>
@@ -92,61 +94,173 @@ export const VoucherPrintModal = ({ pinsToPrint, onClose }: { pinsToPrint: any[]
         @media print {
           @page { 
             size: A4 portrait; 
-            margin: 0; 
+            margin: 10mm; 
           }
           body { 
-            -webkit-print-color-adjust: exact; 
-            print-color-adjust: exact; 
-            background: #ffffff !important; 
-            color: #000000 !important;
-            margin: 0 !important;
-            padding: 0 !important;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #ffffff;
+            color: #000000;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
-          nav, footer, .no-print { display: none !important; }
-          
+          nav, footer, .no-print, .print-hidden { display: none !important; }
+
           #voucher-print-area {
-            padding: 0 !important;
-            margin: 0 !important;
-            width: 100% !important;
-            max-width: none !important;
             display: grid !important;
             grid-template-columns: repeat(4, 1fr) !important;
-            gap: 1mm !important;
-            background: #ffffff !important;
+            gap: 3mm !important;
+            width: 100% !important;
           }
 
-          .voucher-card {
-            height: 24mm !important; 
-            border: 0.5pt solid #cccccc !important;
-            margin: 0 !important;
-            display: flex;
-            flex-direction: column;
-            padding: 4px 6px !important; 
-            background: #ffffff !important;
-            page-break-inside: avoid;
-            break-inside: avoid;
-            box-sizing: border-box;
+          .card {
+            border: 0.5pt solid #ccc !important;
+            padding: 6px !important;
             border-radius: 4px !important;
-            color: #000000 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            height: 24mm !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            box-sizing: border-box !important;
+            color: #000 !important;
+            background: #fff !important;
           }
 
-          .voucher-card-body {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: #fafafa !important;
-            border-radius: 3px;
-            margin: 1px 0;
-            border: 0.2pt solid #eeeeee;
+          .card-header {
+            display: flex !important;
+            justify-content: space-between !important;
+            font-size: 8px !important;
+            font-weight: 800 !important;
           }
+
+          .amount {
+            border: 1px solid #000 !important;
+            padding: 1px 4px !important;
+            font-weight: 900 !important;
+          }
+
+          .card-body {
+            flex: 1 !important;
+            text-align: center !important;
+            background: #fafafa !important;
+            border-radius: 4px !important;
+            margin: 3px 0 !important;
+            padding: 3px 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+
+          .network {
+            font-size: 8px !important;
+            font-weight: 900 !important;
+            background: #000 !important;
+            color: #fff !important;
+            padding: 2px 4px !important;
+            border-radius: 2px !important;
+            display: inline-block !important;
+            margin-bottom: 2px !important;
+          }
+
+          .pin-label {
+            font-size: 7px !important;
+            font-weight: bold !important;
+            color: #666 !important;
+          }
+
+          .pin-value {
+            font-family: monospace !important;
+            font-size: 14px !important;
+            font-weight: 900 !important;
+            letter-spacing: 0.5px !important;
+            color: #000 !important;
+          }
+
+          .voucher-footer {
+            font-size: 6.5px !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            font-weight: bold !important;
+          }
+        }
+
+        /* Non-print styles for preview */
+        .card {
+          border: 0.5pt solid #ccc;
+          padding: 6px;
+          border-radius: 4px;
+          display: flex;
+          flex-direction: column;
+          height: 24mm;
+          background: white;
+          color: #000;
+        }
+
+        .card-header {
+          display: flex;
+          justify-content: space-between;
+          font-size: 8px;
+          font-weight: 800;
+        }
+
+        .amount {
+          border: 1px solid #000;
+          padding: 1px 4px;
+          font-weight: 900;
+        }
+
+        .card-body {
+          flex: 1;
+          text-align: center;
+          background: #fafafa;
+          border-radius: 4px;
+          margin: 3px 0;
+          padding: 3px 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .network {
+          font-size: 8px;
+          font-weight: 900;
+          background: #000;
+          color: #fff;
+          padding: 2px 4px;
+          border-radius: 2px;
+          display: inline-block;
+          margin-bottom: 2px;
+        }
+
+        .pin-label {
+          font-size: 7px;
+          font-weight: bold;
+          color: #666;
+        }
+
+        .pin-value {
+          font-family: monospace;
+          font-size: 14px;
+          font-weight: 900;
+          letter-spacing: 0.5px;
+          color: #000;
+        }
+
+        .voucher-footer {
+          font-size: 6.5px;
+          display: flex;
+          justify-content: space-between;
+          color: #000;
         }
       `}} />
 
       <div className="fixed inset-0 z-[9999] flex flex-col bg-white overflow-hidden print:static print:h-auto print:block print:overflow-visible print:z-auto">
 
-        <div className="flex justify-between items-center px-6 py-4 bg-slate-900 text-white border-b print:hidden shrink-0">
+        <div className="flex justify-between items-center px-6 py-4 bg-slate-900 text-white border-b print-hidden shrink-0">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
               <Printer size={20} />
@@ -177,60 +291,30 @@ export const VoucherPrintModal = ({ pinsToPrint, onClose }: { pinsToPrint: any[]
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-2 bg-slate-100 print:bg-white print:p-0 print:block print:h-auto print:overflow-visible no-scrollbar">
+        <div className="flex-1 overflow-y-auto p-4 bg-slate-100 print:bg-white print:p-0 print:block print:h-auto print:overflow-visible no-scrollbar">
           <div
             id="voucher-print-area"
-            style={{ background: '#ffffff', color: '#000000' }}
-            className="grid grid-cols-2 md:grid-cols-4 print:grid-cols-4 gap-1 p-2 print:p-0 mx-auto max-w-5xl"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 print:grid-cols-4 gap-[3mm] p-2 print:p-0 mx-auto w-fit"
           >
             {pinsToPrint.map((pin, index) => {
-              const config = getNetworkConfig(pin.network || 'MTN');
+              const nw = pin.network || 'N/A';
+              const amt = pin.denomination || 0;
               return (
-                <div
-                  key={`${pin.id}-${index}`}
-                  className="voucher-card break-inside-avoid"
-                  style={{ border: '0.5pt solid #cccccc' }}
-                >
-                  {/* 1. Header Section */}
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-1">
-                      <div
-                        style={{ backgroundColor: config.color }}
-                        className="p-0.5 rounded flex items-center justify-center h-4 w-7"
-                      >
-                        <span style={{ fontSize: '5px', fontWeight: '900', color: config.textColor === 'text-white' ? '#ffffff' : '#000000' }}>{config.text}</span>
-                      </div>
-                      <span style={{ fontSize: '8px', fontWeight: '900', color: '#000000', letterSpacing: '-0.02em' }}>
-                        {CURRENCY}{pin.denomination}
-                      </span>
-                    </div>
-                    <span style={{ fontSize: '5px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase' }}>MuftiPay</span>
+                <div key={`${pin.id}-${index}`} className="card">
+                  <div className="card-header">
+                    <span>MUFTI PAY</span>
+                    <span className="amount">{CURRENCY}{amt}</span>
                   </div>
 
-                  {/* 2. PIN Section */}
-                  <div className="voucher-card-body" style={{ background: '#fafafa', border: '0.2pt solid #eeeeee' }}>
-                    <div className="flex flex-col items-center">
-                      <span style={{ fontSize: '4px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', lineHeight: '1.2' }}>Voucher PIN</span>
-                      <span style={{ fontSize: '10px', fontFamily: 'monospace', fontWeight: '900', color: '#000000', lineHeight: '1.2' }}>
-                        {pin.pinCode.replace(/(.{4})/g, '$1 ')}
-                      </span>
-                    </div>
+                  <div className="card-body">
+                    <div className="network">{nw.toUpperCase()}</div>
+                    <div className="pin-label">Recharge PIN</div>
+                    <div className="pin-value">{pin.pinCode ? formatPin(pin.pinCode) : 'No Pins available'}</div>
                   </div>
 
-                  {/* 3. Info Section */}
-                  <div
-                    className="flex justify-between items-center uppercase tracking-tighter"
-                    style={{ fontSize: '4.5px', fontWeight: '700', color: '#64748b', marginBottom: '1px' }}
-                  >
-                    <span>S/N: {pin.serialNumber}</span>
-                    <span>{new Date().toLocaleDateString()}</span>
-                  </div>
-
-                  {/* 4. Dial Code Section */}
-                  <div className="mt-auto" style={{ borderTop: '0.2pt solid #eeeeee', paddingTop: '1px' }}>
-                    <p style={{ fontSize: '5px', fontWeight: '900', color: '#000000', textAlign: 'center', textTransform: 'uppercase' }}>
-                      Recharge: *311*{pin.pinCode}#
-                    </p>
+                  <div className="voucher-footer">
+                    <span>SN: {pin.serialNumber || 'N/A'}</span>
+                    <span>Load: {getUSSD(nw)}</span>
                   </div>
                 </div>
               );

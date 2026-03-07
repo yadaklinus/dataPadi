@@ -284,165 +284,128 @@ const TransactionDetailsModal: React.FC<TransactionDetailsModalProps> = ({ isOpe
                     position: 'absolute',
                     left: '-9999px',
                     top: '-9999px',
-                    width: '400px',
+                    width: '600px',
                     padding: '40px',
                     background: 'white',
-                    fontFamily: 'Arial, sans-serif'
+                    fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif"
                 }}>
-                    <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-                        <div style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            marginBottom: '10px'
-                        }}>
-                            <div style={{
-                                background: '#2563eb',
-                                color: 'white',
-                                padding: '8px',
-                                borderRadius: '12px',
-                                display: 'flex'
-                            }}>
-                                <Zap size={24} fill="white" />
+                    <style dangerouslySetInnerHTML={{
+                        __html: `
+                        .receipt-container { max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 30px; border-radius: 8px; }
+                        .header { text-align: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 20px; margin-bottom: 20px; }
+                        .header h1 { margin: 0; color: #111827; font-size: 24px; }
+                        .header p { margin: 5px 0 0; color: #6b7280; font-size: 14px; }
+                        .amount-section { text-align: center; margin-bottom: 30px; padding: 20px; background-color: #f9fafb; border-radius: 8px; }
+                        .amount-label { font-size: 14px; color: #6B7280; text-transform: uppercase; letter-spacing: 1px; }
+                        .amount-value { font-size: 36px; font-weight: bold; margin: 10px 0; }
+                        .status { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; text-transform: uppercase; }
+                        .status-success { background-color: #def7ec; color: #03543f; }
+                        .status-pending { background-color: #fef3c7; color: #92400e; }
+                        .status-failed { background-color: #fde8e8; color: #9b1c1c; }
+                        .details { margin-top: 20px; }
+                        .row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #f3f4f6; }
+                        .row:last-child { border-bottom: none; }
+                        .label { color: #6b7280; font-weight: 500; }
+                        .value { font-weight: 600; color: #111827; text-align: right; max-width: 60%; }
+                        .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #9ca3af; }
+                        `
+                    }} />
+
+                    <div className="receipt-container">
+                        <div className="header">
+                            <h1>Transaction Receipt</h1>
+                            <p>Generated on {new Date().toLocaleString()}</p>
+                        </div>
+
+                        <div className="amount-section">
+                            <div className="amount-label">Amount</div>
+                            <div className="amount-value" style={{ color: transaction.type === 'WALLET_FUNDING' ? '#059669' : '#111827' }}>
+                                {transaction.type === 'WALLET_FUNDING' ? '+' : '-'}₦{Number(transaction.amount).toLocaleString()}
                             </div>
-                            <span style={{ fontSize: '24px', fontWeight: '900', color: '#0f172a' }}>Mufti Pay</span>
+                            <div className={`status status-${transaction.status?.toLowerCase() || ''}`}>
+                                {transaction.status || 'UNKNOWN'}
+                            </div>
                         </div>
-                        <p style={{ color: '#64748b', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px', margin: 0 }}>Transaction Receipt</p>
-                    </div>
 
-                    <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-                        <h2 style={{ fontSize: '36px', fontWeight: '900', color: '#0f172a', margin: '0 0 10px 0' }}>
-                            {CURRENCY}{Number(transaction.amount).toLocaleString()}
-                        </h2>
-                        <span style={{
-                            padding: '6px 16px',
-                            borderRadius: '100px',
-                            fontSize: '12px',
-                            fontWeight: '800',
-                            textTransform: 'uppercase',
-                            background: transaction.status === TransactionStatus.SUCCESS ? '#f0fdf4' : '#fef2f2',
-                            color: transaction.status === TransactionStatus.SUCCESS ? '#166534' : '#991b1b',
-                            border: `1px solid ${transaction.status === TransactionStatus.SUCCESS ? '#dcfce7' : '#fee2e2'}`
-                        }}>
-                            {transaction.status}
-                        </span>
-                    </div>
+                        <div className="details">
+                            <div className="row">
+                                <span className="label">Type</span>
+                                <span className="value">{transaction.type.replace('_', ' ')}</span>
+                            </div>
+                            <div className="row">
+                                <span className="label">Date</span>
+                                <span className="value">{new Date(transaction.date || (transaction as any).createdAt).toLocaleString()}</span>
+                            </div>
+                            <div className="row">
+                                <span className="label">Reference</span>
+                                <span className="value">{transaction.reference || transaction.id || 'No Reference'}</span>
+                            </div>
 
-                    <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '20px', marginBottom: '30px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                            <span style={{ color: '#64748b', fontSize: '13px' }}>Reference</span>
-                            <span style={{ color: '#0f172a', fontSize: '13px', fontWeight: '600' }}>{transaction.reference || transaction.id}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                            <span style={{ color: '#64748b', fontSize: '13px' }}>Transaction Type</span>
-                            <span style={{ color: '#0f172a', fontSize: '13px', fontWeight: '600' }}>{transaction.type}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                            <span style={{ color: '#64748b', fontSize: '13px' }}>Date</span>
-                            <span style={{ color: '#0f172a', fontSize: '13px', fontWeight: '600' }}>{new Date(transaction.date || (transaction as any).createdAt).toLocaleString()}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                            <span style={{ color: '#64748b', fontSize: '13px' }}>Description</span>
-                            <span style={{ color: '#0f172a', fontSize: '13px', fontWeight: '600', textAlign: 'right', maxWidth: '60%' }}>{transaction.description}</span>
-                        </div>
-                    </div>
-
-                    <div style={{
-                        background: '#f8fafc',
-                        borderRadius: '20px',
-                        padding: '20px',
-                        marginBottom: '30px'
-                    }}>
-                        <p style={{
-                            fontSize: '10px',
-                            fontWeight: '900',
-                            color: '#94a3b8',
-                            textTransform: 'uppercase',
-                            letterSpacing: '1px',
-                            marginBottom: '15px',
-                            marginTop: 0
-                        }}>Details</p>
-
-                        {transaction.metadata && Object.entries(transaction.metadata).map(([key, value]) => {
-                            if (!value || typeof value === 'object') return null;
-                            if (key === 'cardDetails' || key === 'pins') return null; // Handled below
-
-                            // Apply friendly display for certain education fields
-                            let displayValue = String(value);
-                            if (key === 'examType') {
-                                if (value === 'utme-mock') displayValue = 'JAMB UTME (With Mock)';
-                                if (value === 'utme-no-mock') displayValue = 'JAMB UTME (No Mock)';
-                            }
-
-                            // Improve label casing e.g. "customerName" -> "Customer Name"
-                            const displayLabel = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
-
-                            return (
-                                <div key={key} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                                    <span style={{ color: '#64748b', fontSize: '12px' }}>{displayLabel}</span>
-                                    <span style={{ color: '#0f172a', fontSize: '12px', fontWeight: '600', maxWidth: '60%', textAlign: 'right' }}>{displayValue}</span>
-                                </div>
-                            );
-                        })}
-
-                        {transaction.metadata?.pins && Array.isArray(transaction.metadata.pins) && transaction.metadata.pins.length > 0 && (
-                            <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
-                                <p style={{
-                                    fontSize: '10px',
-                                    fontWeight: '900',
-                                    color: '#94a3b8',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '1px',
-                                    marginBottom: '15px',
-                                    marginTop: 0
-                                }}>Purchased PINs</p>
-                                {transaction.metadata.pins.map((pin: any, index: number) => (
-                                    <div key={index} style={{
-                                        background: '#fff',
-                                        padding: '12px',
-                                        borderRadius: '12px',
-                                        marginBottom: '10px',
-                                        border: '1px solid #e2e8f0'
-                                    }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                                            <span style={{ color: '#64748b', fontSize: '11px' }}>Serial: {pin.serial || pin.Serial}</span>
-                                        </div>
-                                        <div style={{ fontSize: '16px', fontWeight: '700', color: '#0f172a', letterSpacing: '1px' }}>
-                                            {pin.pin || pin.Pin}
-                                        </div>
+                            {transaction.type === 'ELECTRICITY' && (
+                                <div style={{ marginTop: '16px', marginBottom: '16px', padding: '20px', backgroundColor: '#F8FAFC', border: '1px solid #F1F5F9', borderRadius: '16px' }}>
+                                    <div style={{ fontSize: '12px', color: '#94A3B8', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '16px' }}>
+                                        DETAILS
                                     </div>
-                                ))}
-                            </div>
-                        )}
-                        {transaction.metadata?.cardDetails && typeof transaction.metadata.cardDetails === 'string' && (
-                            <div style={{ marginTop: '20px', paddingTop: '20px', borderTop: '1px solid #e2e8f0' }}>
-                                <p style={{
-                                    fontSize: '10px',
-                                    fontWeight: '900',
-                                    color: '#94a3b8',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '1px',
-                                    marginBottom: '10px',
-                                    marginTop: 0
-                                }}>PIN Details</p>
-                                <div style={{
-                                    background: '#fff',
-                                    padding: '12px',
-                                    borderRadius: '12px',
-                                    border: '1px solid #e2e8f0',
-                                    fontSize: '14px',
-                                    fontWeight: '600',
-                                    color: '#0f172a'
-                                }}>
-                                    {transaction.metadata.cardDetails}
+                                    {transaction.metadata?.token && (
+                                        <div className="row" style={{ padding: '8px 0', borderBottom: 'none' }}>
+                                            <span className="label" style={{ color: '#64748B' }}>Token</span>
+                                            <span className="value" style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '16px', fontWeight: '800', color: '#0F172A', letterSpacing: '0.5px' }}>
+                                                {transaction.metadata.token}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {transaction.metadata?.units && (
+                                        <div className="row" style={{ padding: '8px 0', borderBottom: 'none' }}>
+                                            <span className="label" style={{ color: '#64748B' }}>Units</span>
+                                            <span className="value" style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '15px', fontWeight: '800', color: '#0F172A' }}>
+                                                {transaction.metadata.units}
+                                            </span>
+                                        </div>
+                                    )}
+                                    {(transaction.metadata?.meterNumber || (transaction.metadata as any)?.meterNo) && (
+                                        <div className="row" style={{ padding: '8px 0', borderBottom: 'none' }}>
+                                            <span className="label" style={{ color: '#64748B' }}>Meter No</span>
+                                            <span className="value" style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: '15px', fontWeight: '800', color: '#0F172A' }}>
+                                                {transaction.metadata.meterNumber || (transaction.metadata as any).meterNo}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                        )}
-                    </div>
+                            )}
 
-                    <div style={{ textAlign: 'center', marginTop: '40px' }}>
-                        <p style={{ color: '#94a3b8', fontSize: '11px', margin: 0 }}>Thank you for using Mufti Pay.</p>
-                        <p style={{ color: '#cbd5e1', fontSize: '10px', margin: '5px 0 0 0' }}>This is an automated receipt.</p>
+                            {transaction.metadata?.planName && (
+                                <div className="row">
+                                    <span className="label">Plan</span>
+                                    <span className="value">{transaction.metadata.planName}</span>
+                                </div>
+                            )}
+
+                            {transaction.metadata?.network && (
+                                <div className="row">
+                                    <span className="label">Network</span>
+                                    <span className="value">{transaction.metadata.network}</span>
+                                </div>
+                            )}
+
+                            {/* Additional metadata fallbacks */}
+                            {transaction.metadata && Object.entries(transaction.metadata).map(([key, value]) => {
+                                if (!value || typeof value === 'object') return null;
+                                if (['token', 'units', 'meterNumber', 'meterNo', 'planName', 'network'].includes(key)) return null;
+
+                                const displayLabel = key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                                return (
+                                    <div key={key} className="row">
+                                        <span className="label">{displayLabel}</span>
+                                        <span className="value">{String(value)}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div className="footer">
+                            <p>Thank you for using our service.</p>
+                            <p style={{ color: '#cbd5e1', fontSize: '10px', marginTop: '5px' }}>This is an automated receipt.</p>
+                        </div>
                     </div>
                 </div>,
                 document.body
