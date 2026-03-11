@@ -1,8 +1,8 @@
 import React from 'react';
 import { X, Printer, FileDown } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+
+// Dynamic imports will be handled inside handleDownloadPDF
 
 const CURRENCY = '₦';
 
@@ -21,12 +21,17 @@ export const VoucherPrintModal = ({ pinsToPrint, onClose }: { pinsToPrint: any[]
 
     try {
       setIsExporting(true);
+
+      // Dynamic imports for heavy libraries
+      const html2canvas = (await import('html2canvas')).default;
+      const { jsPDF } = await import('jspdf');
+
       const canvas = await html2canvas(printableArea, {
         scale: 2,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
-        onclone: (clonedDoc) => {
+        onclone: (clonedDoc: Document) => {
           const el = clonedDoc.getElementById('voucher-print-area');
           if (el) {
             el.style.setProperty('--background', '#ffffff', 'important');

@@ -1,11 +1,11 @@
+import { Suspense } from 'react';
 import { getDashboardData } from '@/app/actions/dashboard';
 import Dashboard from '@/components/dashboardComponet';
 import { redirect } from 'next/navigation';
+import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 
-export default async function DashboardPage() {
+async function DashboardContent() {
   const result = await getDashboardData();
-
-  console.log(result)
 
   if (!result.success || !result.data) {
     // If unauthorized or error, kick back to login
@@ -13,4 +13,12 @@ export default async function DashboardPage() {
   }
 
   return <Dashboard initialData={result.data} />;
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<DashboardSkeleton />}>
+      <DashboardContent />
+    </Suspense>
+  );
 }

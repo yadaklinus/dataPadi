@@ -21,48 +21,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // SCENARIO C: Access Token expired/missing but have Refresh Token
+  // We no longer block in middleware. We let the page layout/skeleton render instantly
+  // and handle the refresh in the actual data fetching layer (authorizedFetch).
   if (isProtectedPage && !accessToken && refreshToken) {
-    const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/v1/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const nextResponse = NextResponse.next();
-
-        // Update persistent cookies in the response
-        nextResponse.cookies.set('accessToken', data.accessToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 15 * 60,
-        });
-
-        nextResponse.cookies.set('refreshToken', data.refreshToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/',
-          maxAge: 60 * 60 * 24 * 7,
-        });
-
-        return nextResponse;
-      }
-    } catch (err) {
-      console.error('Middleware Refresh Error:', err);
-    }
-
-    // Refresh failed or error -> force logout
-    const nextResponse = NextResponse.redirect(new URL('/auth/login', request.url));
-    nextResponse.cookies.delete('accessToken');
-    nextResponse.cookies.delete('refreshToken');
-    return nextResponse;
+    return NextResponse.next();
   }
 
   return NextResponse.next();

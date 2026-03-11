@@ -26,6 +26,16 @@ export interface User {
   };
 }
 
+export interface FundingResponse {
+  status: string;
+  accountNumber: string;
+  accountName: string;
+  bankName: string;
+  amount: number;
+  reference: string;
+  message?: string;
+}
+
 export enum NetworkId {
   MTN = 'MTN',
   AIRTEL = 'AIRTEL',

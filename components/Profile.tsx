@@ -1,18 +1,22 @@
 "use client"
 import React, { useState } from 'react';
+import dynamic from 'next/dynamic';
 import {
   User, Shield, Bell, LogOut, ChevronRight, HelpCircle,
   CheckCircle2, AlertCircle, Copy, Wallet, ExternalLink
 } from 'lucide-react';
 import { initializeGatewayFunding } from '@/app/actions/payment';
 import { logoutUser } from '@/app/actions/auth/logout';
-import KYCModal from '@/components/modals/KYCModal';
-import PaymentModal from '@/components/modals/PaymentModal';
-import ChangePinModal from '@/components/modals/ChangePinModal';
 import { CURRENCY } from '@/constants';
+import { FundingResponse } from '@/types/types';
+
+// Dynamic imports for modals
+const KYCModal = dynamic(() => import('@/components/modals/KYCModal'), { ssr: false });
+const FundingDetailsModal = dynamic(() => import('@/components/modals/FundingDetailsModal'), { ssr: false });
+const ChangePinModal = dynamic(() => import('@/components/modals/ChangePinModal'), { ssr: false });
 
 interface ProfileProps {
-  initialUser?: {
+  initialUser: {
     fullName: string;
     email: string;
     isKycVerified: boolean;
@@ -26,22 +30,14 @@ interface ProfileProps {
 }
 
 const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
-  if (!initialUser) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 min-h-screen">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
-        <p className="text-gray-500 font-medium text-sm">Loading profile...</p>
-      </div>
-    );
-  }
 
   const [isKYCOpen, setIsKYCOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [fundingAmount, setFundingAmount] = useState('');
   const [isFunding, setIsFunding] = useState(false);
   const [error, setError] = useState('');
-  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
-  const [paymentLink, setPaymentLink] = useState('');
+  const [isFundingModalOpen, setIsFundingModalOpen] = useState(false);
+  const [fundingData, setFundingData] = useState<FundingResponse | null>(null);
   const [isChangePinOpen, setIsChangePinOpen] = useState(false);
 
   const handleCopyAccount = () => {
@@ -53,7 +49,7 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
     }
   };
 
-  const handleFundWithCard = async () => {
+  const handleInitializeFunding = async () => {
     const amount = Number(fundingAmount);
     if (!fundingAmount || isNaN(amount) || amount < 100) {
       setError("Minimum funding amount is " + CURRENCY + "100");
@@ -65,9 +61,9 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
 
     const result = await initializeGatewayFunding(amount);
 
-    if (result.success && result.paymentLink) {
-      setPaymentLink(result.paymentLink);
-      setIsPaymentOpen(true);
+    if (result.success && result.data) {
+      setFundingData(result.data);
+      setIsFundingModalOpen(true);
       setFundingAmount('');
     } else {
       setError(result.error || 'Could not initialize payment');
@@ -166,7 +162,7 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
               </div>
               <button
                 disabled={isFunding}
-                onClick={handleFundWithCard}
+                onClick={handleInitializeFunding}
                 className="w-full bg-white text-blue-700 h-14 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50 hover:bg-gray-50 active:scale-95 transition-all shadow-md"
               >
                 {isFunding ? 'Processing...' : <><ExternalLink size={18} /> Fund Account</>}
@@ -227,10 +223,10 @@ const Profile: React.FC<ProfileProps> = ({ initialUser }) => {
 
       {/* Modals */}
       <KYCModal isOpen={isKYCOpen} onClose={() => setIsKYCOpen(false)} />
-      <PaymentModal
-        isOpen={isPaymentOpen}
-        onClose={() => setIsPaymentOpen(false)}
-        url={paymentLink}
+      <FundingDetailsModal
+        isOpen={isFundingModalOpen}
+        onClose={() => setIsFundingModalOpen(false)}
+        data={fundingData}
       />
       <ChangePinModal
         isOpen={isChangePinOpen}

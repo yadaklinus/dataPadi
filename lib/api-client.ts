@@ -18,10 +18,16 @@ export async function authorizedFetch(endpoint: string, options: RequestInit = {
     ...options.headers,
   });
 
+  const startTime = Date.now();
   let response = await fetch(`${BACKEND_URL}${endpoint}`, {
     ...options,
     headers: getHeaders(accessToken),
   });
+  const endTime = Date.now();
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[API] ${options.method || 'GET'} ${endpoint} - ${response.status} (${endTime - startTime}ms)`);
+  }
 
   // Handle unauthorized (expired accessToken)
   if (response.status === 401 && refreshToken) {

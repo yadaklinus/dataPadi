@@ -2,25 +2,36 @@
 'use server'
 
 import { authorizedFetch } from '@/lib/api-client';
+import { FundingResponse } from '@/types/types';
 
 /**
- * Get a Flutterwave hosted payment link for wallet funding[cite: 235, 238].
- * Minimum amount: ₦100[cite: 240].
+ * Initialize a one-time dynamic bank account for wallet funding.
+ * Minimum amount: ₦100.
  */
-export async function initializeGatewayFunding(amount: number) {
+export async function initializeGatewayFunding(amount: number): Promise<{ success: boolean; data?: FundingResponse; error?: string }> {
   try {
     const response = await authorizedFetch('/api/v1/payment/fund/init', {
       method: 'POST',
-      body: JSON.stringify({ amount }), // [cite: 239, 240]
+      body: JSON.stringify({ amount }),
     });
 
     const result = await response.json();
+
+    if (response.ok && result.status === 'OK') {
+      return {
+        success: true,
+        data: result
+      };
+    }
+
+    console.log(result)
+
     return {
-      success: response.ok,
-      paymentLink: result.paymentLink,
-      error: result.message
+      success: false,
+      error: result.message || 'Failed to initialize payment'
     };
   } catch (error) {
+    console.log(error)
     return { success: false, error: 'Failed to connect to payment gateway' };
   }
 }

@@ -1,11 +1,13 @@
-// --- PrintPins.tsx ---
 "use client"
 import React, { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { Printer, Download, History, CheckCircle2, Loader2, AlertCircle, PlusCircle } from 'lucide-react';
 import { printRechargePins, getPrintInventory } from '@/app/actions/vtu';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { VoucherPrintModal } from './VoucherPrintModal'; // Adjust import if you moved the code above to a new file
+
+// Dynamic import for the high-weight print modal
+const VoucherPrintModal = dynamic(() => import('./VoucherPrintModal').then(mod => mod.VoucherPrintModal), { ssr: false });
 
 type NetworkId = 'MTN' | 'AIRTEL' | 'GLO' | '9MOBILE';
 const CURRENCY = '₦';
@@ -37,14 +39,18 @@ const NetworkSelector: React.FC<any> = ({ selectedNetwork, onSelect }) => {
   );
 };
 
-const PrintPins: React.FC = () => {
+interface PrintPinsProps {
+  initialInventory?: any[];
+}
+
+const PrintPins: React.FC<PrintPinsProps> = ({ initialInventory = [] }) => {
   const [activeTab, setActiveTab] = useState<'new' | 'history'>('new');
   const [selectedNetwork, setSelectedNetwork] = useState<NetworkId | null>(null);
   const [amount, setAmount] = useState('');
   const [quantity, setQuantity] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const [inventory, setInventory] = useState<any[]>([]);
+  const [inventory, setInventory] = useState<any[]>(initialInventory);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [error, setError] = useState('');
 
