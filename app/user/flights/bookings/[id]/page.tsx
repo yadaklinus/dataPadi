@@ -17,8 +17,8 @@ async function BookingDetailsContent({ id }: { id: string }) {
     return <BookingDetailsClient id={id} initialRequest={result.data} />;
 }
 
-export default function BookingDetailsPage({ params }: { params: { id: string } }) {
-    const { id } = params;
+export default async function BookingDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
 
     return (
         <Suspense fallback={<BookingDetailsSkeleton />}>
