@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic';
 import { Suspense } from 'react';
 import { getDashboardData } from '@/app/actions/dashboard';
-import Dashboard from '@/components/dashboardComponet';
+import Dashboard from '@/components/dashboardComponent';
 import { redirect } from 'next/navigation';
 import { DashboardSkeleton } from '@/components/dashboard/DashboardSkeleton';
 
