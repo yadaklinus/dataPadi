@@ -8,7 +8,6 @@ import { Loader2, ArrowLeft, Plane, CheckCircle, AlertCircle, Calendar, Download
 import { toast } from 'react-hot-toast';
 import BottomNav from '@/components/layout/BottomNav';
 import Button from '@/components/ui/Button';
-import { useSocket } from '@/components/providers/SocketProvider';
 
 interface BookingDetailsClientProps {
     id: string;
@@ -28,7 +27,6 @@ export default function BookingDetailsClient({ id, initialRequest }: BookingDeta
     // Payment State
     const [selectedProvider, setSelectedProvider] = useState('MONNIFY');
     const [paymentInstruction, setPaymentInstruction] = useState<any>(null);
-    const socket = useSocket();
 
     useEffect(() => {
         // Initialize passenger forms if in OPTIONS_PROVIDED state
@@ -44,14 +42,6 @@ export default function BookingDetailsClient({ id, initialRequest }: BookingDeta
             setPassengers(newPassengers);
         }
     }, [request]);
-
-    // Socket Event Listener
-    useEffect(() => {
-        if (!socket || !id) return;
-        const handleFlightPayment = () => fetchRequestDetails();
-        socket.on("flight_payment_received", handleFlightPayment);
-        return () => { socket.off("flight_payment_received", handleFlightPayment); };
-    }, [socket, id]);
 
     // Fallback Polling when awaiting transfer
     useEffect(() => {

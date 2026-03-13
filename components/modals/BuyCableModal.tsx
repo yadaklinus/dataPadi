@@ -42,6 +42,7 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose, onRefres
   // Validation & Transaction States
   const [customerName, setCustomerName] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [currentBouquet, setCurrentBouquet] = useState('');
   const [isLoadingPackages, setIsLoadingPackages] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [isValidated, setIsValidated] = useState(false);
@@ -79,6 +80,7 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose, onRefres
     setSearchQuery('');
     setCustomerName('');
     setDueDate('');
+    setCurrentBouquet('');
     setIsValidated(false);
     setIsValidating(false);
     setIsProcessing(false);
@@ -111,6 +113,7 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose, onRefres
     if (res.success && res.customerName) {
       setCustomerName(res.customerName);
       setDueDate(res.dueDate);
+      setCurrentBouquet(res.currentBouquet);
       setIsValidated(true);
     } else {
       setErrorMessage(res.error || 'Unable to verify smartcard. Please check your details.');
@@ -299,9 +302,11 @@ const BuyCableModal: React.FC<BuyCableModalProps> = ({ isOpen, onClose, onRefres
                       <p className="text-[10px] text-green-600 font-bold uppercase tracking-wider">Verified Customer</p>
                       <p className="font-bold text-gray-800">{customerName}</p>
                     </div>
-                    {/*due Date*/}
+                    <br /><br />
                     <p className="text-[10px] text-green-600 font-bold uppercase tracking-wider">Due Date</p>
                     <p className="font-bold text-gray-800">{dueDate}</p>
+                    <p className="text-[10px] text-green-600 font-bold uppercase tracking-wider">Current Bouquet</p>
+                    <p className="font-bold text-gray-800">{currentBouquet}</p>
                   </div>
 
                   <div className="flex-1 flex flex-col min-h-0">

@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.dockerignore
+Dockerfile
+package-lock.json
+README.md
+.vscode
+.gemini
+.npmrc
+*.mjs
+*.ts
+*.js
+!next.config.js
+!postcss.config.js
+!tailwind.config.ts

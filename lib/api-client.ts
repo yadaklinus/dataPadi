@@ -40,16 +40,49 @@ export async function authorizedFetch(endpoint: string, options: RequestInit = {
 
       if (refreshResponse.ok) {
         const refreshData = await refreshResponse.json();
+        const newAccessToken = refreshData.accessToken;
+        const newRefreshToken = refreshData.refreshToken;
+
+        // Persist BOTH tokens back to cookies immediately
+        // Note: In Next.js Server Actions/Route Handlers, we can set cookies.
+        // In Server Components, this might fail if called during rendering.
+        try {
+          const cookieOptions = {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax' as const,
+            path: '/',
+            maxAge: 60 * 60 * 24 * 7 // 7 days
+          };
+
+          cookieStore.set('accessToken', newAccessToken, cookieOptions);
+
+          if (newRefreshToken) {
+            cookieStore.set('refreshToken', newRefreshToken, cookieOptions);
+          }
+        } catch (cookieError) {
+          // This happens if authorizedFetch is called in a context where cookies are read-only (e.g. Server Component body)
+          console.warn('[API] Could not update cookies in this context (likely a Server Component). Tokens will be stale on next request.');
+        }
 
         // Retry original request with NEW access token for the current stream
-        // Persistent cookie updates are handled by the Middleware layer
         response = await fetch(`${BACKEND_URL}${endpoint}`, {
           ...options,
-          headers: getHeaders(refreshData.accessToken),
+          headers: getHeaders(newAccessToken),
         });
+      } else {
+        // Any other refresh failure (401, 403, 500, etc.)
+        // Clear session to prevent infinite reload loops
+        console.error(`[API] Refresh failed with status ${refreshResponse.status}. Logging out.`);
+        try {
+          cookieStore.delete('accessToken');
+          cookieStore.delete('refreshToken');
+        } catch (e) {
+          console.warn('[API] Could not clear cookies in this context.');
+        }
       }
     } catch (err) {
-      console.error('Token refresh error:', err);
+      console.error(' [API] Token refresh network error:', err);
     }
   }
 
