@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { Suspense } from 'react';
 import { getProfileData } from '@/app/actions/user';
 import Profile from '@/components/Profile';

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { Suspense } from 'react';
 import { getTransactionHistory } from '@/app/actions/user';
 import TransactionsClient from '@/components/transactions/TransactionsClient';

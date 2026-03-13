@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { Suspense } from 'react';
 import { getUserFlights } from '@/app/actions/flight';
 import BookingsClient from '@/components/flights/BookingsClient';
