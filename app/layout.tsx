@@ -1,5 +1,6 @@
 import "@/styles/globals.css";
 import { Metadata, Viewport } from "next";
+import Script from "next/script";
 import clsx from "clsx";
 
 
@@ -57,7 +58,14 @@ export default function RootLayout({
 }) {
   return (
     <html suppressHydrationWarning lang="en">
-      <head />
+      <head>
+        <Script
+          defer
+          src="http://umami-huoyjim34sag3814eqsuen28.72.61.201.50.sslip.io/script.js"
+          data-website-id="2a046a95-ddcc-4e9a-ae19-58dd5788a8fe"
+          strategy="afterInteractive"
+        />
+      </head>
       <body
         className={clsx(
 
