@@ -1,7 +1,7 @@
 // app/actions/electricity.ts
 'use server'
 
-import { authorizedFetch } from '@/lib/api-client';
+import { authorizedFetch, isRedirect } from '@/lib/api-client';
 
 // --- TYPES & INTERFACES ---
 
@@ -54,6 +54,7 @@ export async function getDiscos() {
       data: result.data
     };
   } catch (error) {
+    if (isRedirect(error)) throw error;
     console.error('Disco Fetch Error:', error);
     return { success: false, error: 'Network connection failed' };
   }
@@ -86,6 +87,7 @@ export async function verifyMeter(discoCode: string, meterNo: string, isPrepaid:
       data: result.data
     };
   } catch (error) {
+    if (isRedirect(error)) throw error;
     console.error('Meter Verification Error:', error);
     return { success: false, error: 'Network connection failed' };
   }
@@ -126,6 +128,7 @@ export async function payElectricity(payload: ElectricityPaymentPayload): Promis
       units: result.units
     };
   } catch (error) {
+    if (isRedirect(error)) throw error;
     console.error('Electricity Payment Error:', error);
     return { success: false, error: 'Transaction failed due to network error' };
   }

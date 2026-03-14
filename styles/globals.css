@@ -11,6 +11,12 @@
 @theme {
     --font-sans: "font", sans-serif;
     --font-mono: "monospace", monospace;
+
+    --color-mufti-blue: #2563eb;
+    --color-mufti-green: #10b981;
+    --color-mufti-teal: #14b8a6;
+    --color-mufti-darkGreen: #059669;
+    --color-mufti-darkBlue: #1e40af;
 }
 
 @theme inline {

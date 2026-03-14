@@ -1,6 +1,6 @@
 'use server'
 
-import { authorizedFetch } from '@/lib/api-client';
+import { authorizedFetch, isRedirect } from '@/lib/api-client';
 
 export interface DashboardData {
   user: {
@@ -36,6 +36,7 @@ export async function getDashboardData() {
 
     return { success: true, data: result.data as DashboardData };
   } catch (error) {
+    if (isRedirect(error)) throw error;
     console.error('Dashboard Fetch Error:', error);
     return { success: false, error: 'Network connection failed' };
   }

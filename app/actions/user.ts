@@ -1,7 +1,7 @@
 // app/actions/user.ts
 'use server'
 
-import { authorizedFetch } from '@/lib/api-client';
+import { authorizedFetch, isRedirect } from '@/lib/api-client';
 
 export async function getTransactionHistory(page: number = 1, limit: number = 20, type?: string) {
   try {
@@ -24,6 +24,7 @@ export async function getTransactionHistory(page: number = 1, limit: number = 20
       pagination: result.pagination // [cite: 23, 29, 113]
     };
   } catch (error) {
+    if (isRedirect(error)) throw error;
     return { success: false, error: 'Network connection failed' };
   }
 }
@@ -39,6 +40,7 @@ export async function getProfileData() {
 
     return { success: true, data: result.data }; // [cite: 80]
   } catch (error) {
+    if (isRedirect(error)) throw error;
     console.error('Profile Fetch Error:', error);
     return { success: false, error: 'Network connection failed' };
   }

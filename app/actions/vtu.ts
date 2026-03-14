@@ -1,7 +1,7 @@
 // app/actions/vtu.ts
 'use server'
 
-import { authorizedFetch } from '@/lib/api-client';
+import { authorizedFetch, isRedirect } from '@/lib/api-client';
 
 // --- TYPES & INTERFACES ---
 
@@ -70,6 +70,7 @@ export async function getDataPlans() {
     // Matches your response: data -> MOBILE_NETWORK
     return { success: true, data: result.data.MOBILE_NETWORK as NetworkPlans };
   } catch (error) {
+    if (isRedirect(error)) throw error;
     console.error('Data Plan Fetch Error:', error);
     return { success: false, error: 'Network connection failed' };
   }
@@ -177,6 +178,7 @@ export async function printRechargePins(network: string, value: string, quantity
       error: !response.ok ? result.message : undefined
     };
   } catch (error) {
+    if (isRedirect(error)) throw error;
     return { success: false, error: 'Failed to connect to printer service' };
   }
 }
@@ -193,6 +195,7 @@ export async function getPrintInventory() {
       data: result.data // [cite: 121]
     };
   } catch (error) {
+    if (isRedirect(error)) throw error;
     return { success: false, error: 'Could not load inventory' };
   }
 }
@@ -275,6 +278,7 @@ export async function buyEducationPin(provider: 'WAEC' | 'JAMB', examType: strin
       data: result.data // { cardDetails: "...", transactionId: "..." }
     };
   } catch (error) {
+    if (isRedirect(error)) throw error;
     return { success: false, error: 'Transaction failed due to network error' };
   }
 }

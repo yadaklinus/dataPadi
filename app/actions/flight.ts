@@ -1,6 +1,6 @@
 'use server';
 
-import { authorizedFetch } from '@/lib/api-client';
+import { authorizedFetch, isRedirect } from '@/lib/api-client';
 
 export interface FlightRequestPayload {
     origin: string;
@@ -50,17 +50,18 @@ export async function requestFlight(payload: FlightRequestPayload) {
             message: result.message,
         };
     } catch (error) {
+        if (isRedirect(error)) throw error;
         console.error('Request Flight Error:', error);
         return { success: false, error: 'Network connection failed' };
     }
 }
 
 /**
- * Screen 3: User selects an option and provides passenger details
+ * Screen 3: User "Books" an option (Provides passengers, starts 30m window)
  */
-export async function selectFlightOption(requestId: string, payload: FlightSelectionPayload) {
+export async function bookFlight(requestId: string, payload: FlightSelectionPayload) {
     try {
-        const response = await authorizedFetch(`/api/v1/flights/user/${requestId}/select`, {
+        const response = await authorizedFetch(`/api/v1/flights/user/${requestId}/book`, {
             method: 'POST',
             body: JSON.stringify(payload),
         });
@@ -68,7 +69,7 @@ export async function selectFlightOption(requestId: string, payload: FlightSelec
         const result = await response.json();
 
         if (!response.ok) {
-            return { success: false, error: result.message || 'Failed to select flight option.' };
+            return { success: false, error: result.message || 'Failed to book flight.' };
         }
 
         return {
@@ -77,19 +78,20 @@ export async function selectFlightOption(requestId: string, payload: FlightSelec
             message: result.message,
         };
     } catch (error) {
-        console.error('Select Flight Option Error:', error);
+        if (isRedirect(error)) throw error;
+        console.error('Book Flight Error:', error);
         return { success: false, error: 'Network connection failed' };
     }
 }
 
 /**
- * Screen 4: User pays for the flight
+ * Screen 4: User pays for the flight via wallet balance
  */
-export async function payForFlight(requestId: string, provider: string) {
+export async function payForFlight(requestId: string) {
     try {
         const response = await authorizedFetch(`/api/v1/flights/user/${requestId}/pay`, {
             method: 'POST',
-            body: JSON.stringify({ provider }),
+            body: JSON.stringify({}),
         });
 
         const result = await response.json();
@@ -104,6 +106,7 @@ export async function payForFlight(requestId: string, provider: string) {
             message: result.message,
         };
     } catch (error) {
+        if (isRedirect(error)) throw error;
         console.error('Pay for Flight Error:', error);
         return { success: false, error: 'Network connection failed' };
     }
@@ -126,6 +129,7 @@ export async function getUserFlights() {
             data: result.data,
         };
     } catch (error) {
+        if (isRedirect(error)) throw error;
         console.error('Get User Flights Error:', error);
         return { success: false, error: 'Network connection failed' };
     }
@@ -150,6 +154,7 @@ export async function getFlightRequest(requestId: string) {
             data: result.data,
         };
     } catch (error) {
+        if (isRedirect(error)) throw error;
         console.error('Get Flight Request Error:', error);
         return { success: false, error: 'Network connection failed' };
     }
@@ -177,6 +182,7 @@ export async function cancelFlightRequest(requestId: string) {
             message: result.message,
         };
     } catch (error) {
+        if (isRedirect(error)) throw error;
         console.error('Cancel Flight Error:', error);
         return { success: false, error: 'Network connection failed' };
     }
@@ -201,7 +207,21 @@ export async function getAirports() {
             data: airportsList,
         };
     } catch (error) {
+        if (isRedirect(error)) throw error;
         console.error('Get Airports Error:', error);
+        return { success: false, error: 'Network connection failed' };
+    }
+}
+
+export async function getFlightTransactions() {
+    try {
+        const response = await authorizedFetch('/api/v1/flights/user/transactions');
+        const result = await response.json();
+        if (!response.ok) return { success: false, error: result.message || 'Failed to fetch transactions' };
+        return { success: true, data: result.data };
+    } catch (error) {
+        if (isRedirect(error)) throw error;
+        console.error('Fetch Transactions Error:', error);
         return { success: false, error: 'Network connection failed' };
     }
 }

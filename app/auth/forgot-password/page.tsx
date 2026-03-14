@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Mail, ArrowRight, AlertCircle, Zap, ArrowLeft } from 'lucide-react';
+import { Mail, ArrowRight, AlertCircle, ArrowLeft, Zap } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { forgotPassword } from '@/app/actions/auth/password-reset';
@@ -61,10 +62,9 @@ const ForgotPassword = () => {
                 {/* Branding */}
                 <div className="mb-12 text-center">
                     <Link href="/" className="inline-flex items-center gap-2 group mb-8">
-                        <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-blue-600/30 group-hover:scale-105 transition-transform">
-                            <Zap size={26} fill="currentColor" />
+                        <div className="flex items-center justify-center group-hover:scale-105 transition-transform">
+                            <Image src="/muftiPay.png" alt="Mufti Pay Logo" width={160} height={50} className="object-contain" priority />
                         </div>
-                        <span className="font-black text-2xl tracking-tight text-slate-900">Mufti Pay</span>
                     </Link>
                     <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-3">Forgot Password</h1>
                     <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Enter your email to receive an OTP</p>

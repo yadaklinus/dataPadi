@@ -6,7 +6,6 @@ export async function GET(request: Request) {
 
     // Clear the auth cookies
     cookieStore.delete('accessToken');
-    cookieStore.delete('refreshToken');
 
     // Redirect to the login page
     const url = new URL(request.url);

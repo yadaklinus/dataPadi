@@ -1,7 +1,7 @@
 // app/actions/payment.ts
 'use server'
 
-import { authorizedFetch } from '@/lib/api-client';
+import { authorizedFetch, isRedirect } from '@/lib/api-client';
 import { FundingResponse } from '@/types/types';
 
 /**
@@ -31,6 +31,7 @@ export async function initializeGatewayFunding(amount: number): Promise<{ succes
       error: result.message || 'Failed to initialize payment'
     };
   } catch (error) {
+    if (isRedirect(error)) throw error;
     console.log(error)
     return { success: false, error: 'Failed to connect to payment gateway' };
   }
@@ -53,6 +54,7 @@ export async function verifyBVN(bvn: string, firstName: string, lastName: string
       error: result.message || 'Verification failed'
     };
   } catch (error) {
+    if (isRedirect(error)) throw error;
     return { success: false, error: 'Network connection failed' };
   }
 }

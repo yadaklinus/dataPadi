@@ -43,4 +43,6 @@ export const siteConfig = {
     github: "https://muftipay.com",
     twitter: "https://x.com/muftipay",
   },
+  url: "https://muftipay.com",
+  ogImage: "https://muftipay.com/muftipay-og.PNG",
 };

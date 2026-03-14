@@ -12,7 +12,6 @@ export async function logoutUser() {
 
     // Clear the auth cookies
     cookieStore.delete('accessToken');
-    cookieStore.delete('refreshToken');
 
     // Redirect to the login page
     redirect('/auth/login');

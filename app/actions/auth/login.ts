@@ -33,17 +33,8 @@ export async function loginUser(formData: FormData) {
     // Set the JWT tokens in httpOnly cookies
     const cookieStore = await cookies();
 
-    // Access Token (Short-lived)
+    // Access Token (Long-lived: 7 days)
     cookieStore.set('accessToken', data.accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 15 * 60, // 15 minutes
-    });
-
-    // Refresh Token (Long-lived)
-    cookieStore.set('refreshToken', data.refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

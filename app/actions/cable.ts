@@ -1,7 +1,7 @@
 // app/actions/cable.ts
 'use server'
 
-import { authorizedFetch } from '@/lib/api-client';
+import { authorizedFetch, isRedirect } from '@/lib/api-client';
 
 export interface CablePackage {
   PACKAGE_ID: string;
@@ -42,6 +42,7 @@ export async function getCablePackages() {
       data: result.data as CablePackagesResponse
     };
   } catch (error) {
+    if (isRedirect(error)) throw error;
     console.error('Cable Packages Fetch Error:', error);
     return { success: false, error: 'Network connection failed' };
   }
@@ -72,6 +73,7 @@ export async function verifySmartCard(cableTV: string, smartCardNo: string) {
       currentBouquet: result.data["Current_Bouquet"] || result.data["current_bouquet"] || 'N/A'
     };
   } catch (error) {
+    if (isRedirect(error)) throw error;
     console.error('Smartcard Verification Error:', error);
     return { success: false, error: 'Network connection failed' };
   }
@@ -99,6 +101,7 @@ export async function payCableSubscription(payload: CablePaymentPayload) {
       transactionId: result.transactionId
     };
   } catch (error) {
+    if (isRedirect(error)) throw error;
     console.error('Cable Payment Error:', error);
     return { success: false, error: 'Transaction failed due to network error' };
   }
