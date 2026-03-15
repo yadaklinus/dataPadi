@@ -61,8 +61,8 @@ export default function RootLayout({
       <head>
         <Script
           defer
-          src="http://umami-huoyjim34sag3814eqsuen28.72.61.201.50.sslip.io/script.js"
-          data-website-id="2a046a95-ddcc-4e9a-ae19-58dd5788a8fe"
+          src="https://analytics.muftipay.com/script.js"
+          data-website-id="9354461d-3442-4b73-ade6-72e197a51bae"
           strategy="afterInteractive"
         />
       </head>
