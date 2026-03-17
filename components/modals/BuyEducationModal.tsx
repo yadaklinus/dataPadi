@@ -2,409 +2,477 @@
 import React, { useState, useEffect } from 'react';
 import BottomSheet from './BottomSheet';
 import Button from '../ui/Button';
-import Input from '../ui/Input';
-import { CURRENCY } from '@/constants';
-import { Phone, CheckCircle, ArrowLeft, AlertCircle, Loader2, GraduationCap, FileText, User, Lock } from 'lucide-react';
 import PinInput from '../ui/PinInput';
-import { motion } from 'framer-motion';
+import { CURRENCY } from '@/constants';
+import { Phone, CheckCircle, AlertCircle, Loader2, GraduationCap, FileText, User, Lock, Shield, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { verifyJambProfile, buyEducationPin } from '@/app/actions/vtu';
 
 interface BuyEducationModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    onRefresh?: () => void;
+  isOpen: boolean;
+  onClose: () => void;
+  onRefresh?: () => void;
 }
 
 type Provider = 'WAEC' | 'JAMB' | 'JAMB_MOCK';
 type Step = 'PROVIDER' | 'DETAILS' | 'CONFIRM' | 'PIN' | 'SUCCESS';
 
-const EDUCATION_PRODUCTS = {
-    WAEC: { name: 'WAEC Result Checker', price: 3500, examType: 'waecdirect', icon: FileText },
-    JAMB: { name: 'JAMB UTME (No Mock)', price: 6200, examType: 'utme-no-mock', icon: GraduationCap },
-    JAMB_MOCK: { name: 'JAMB UTME (With Mock)', price: 7700, examType: 'utme-mock', icon: GraduationCap },
+const EDUCATION_PRODUCTS: Record<Provider, {
+  name: string; price: number; examType: string;
+  color: string; lightColor: string; subtitle: string;
+}> = {
+  WAEC: {
+    name: 'WAEC Result Checker',
+    price: 3500,
+    examType: 'waecdirect',
+    color: '#10b981',
+    lightColor: '#ecfdf5',
+    subtitle: 'Check WAEC/WASSCE results instantly',
+  },
+  JAMB: {
+    name: 'JAMB UTME (No Mock)',
+    price: 6200,
+    examType: 'utme-no-mock',
+    color: '#6366f1',
+    lightColor: '#eef2ff',
+    subtitle: 'UTME registration without mock exam',
+  },
+  JAMB_MOCK: {
+    name: 'JAMB UTME (With Mock)',
+    price: 7700,
+    examType: 'utme-mock',
+    color: '#8b5cf6',
+    lightColor: '#f5f3ff',
+    subtitle: 'UTME registration including mock exam',
+  },
+};
+
+const PROVIDER_ICONS: Record<Provider, typeof FileText> = {
+  WAEC: FileText,
+  JAMB: GraduationCap,
+  JAMB_MOCK: GraduationCap,
 };
 
 const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose, onRefresh }) => {
-    const [step, setStep] = useState<Step>('PROVIDER');
-    const [provider, setProvider] = useState<Provider | null>(null);
+  const [step, setStep] = useState<Step>('PROVIDER');
+  const [provider, setProvider] = useState<Provider | null>(null);
+  const [phoneNo, setPhoneNo] = useState('');
+  const [profileId, setProfileId] = useState('');
+  const [verifiedName, setVerifiedName] = useState<string | null>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [transactionPin, setTransactionPin] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [transactionData, setTransactionData] = useState<any>(null);
 
-    const [phoneNo, setPhoneNo] = useState('');
-    const [profileId, setProfileId] = useState('');
-    const [verifiedName, setVerifiedName] = useState<string | null>(null);
+  const product = provider ? EDUCATION_PRODUCTS[provider] : null;
+  const isJamb = provider === 'JAMB' || provider === 'JAMB_MOCK';
+  const pc = product?.color ?? '#6366f1';
 
-    const [isVerifying, setIsVerifying] = useState(false);
-    const [isPurchasing, setIsPurchasing] = useState(false);
-    const [transactionPin, setTransactionPin] = useState('');
-    const [errorMessage, setErrorMessage] = useState('');
-    const [transactionData, setTransactionData] = useState<any>(null);
+  const reset = () => {
+    setStep('PROVIDER');
+    setProvider(null);
+    setPhoneNo('');
+    setProfileId('');
+    setVerifiedName(null);
+    setIsPurchasing(false);
+    setIsVerifying(false);
+    setTransactionPin('');
+    setErrorMessage('');
+    setTransactionData(null);
+  };
 
-    const reset = () => {
-        setStep('PROVIDER');
-        setProvider(null);
-        setPhoneNo('');
-        setProfileId('');
-        setVerifiedName(null);
-        setIsPurchasing(false);
-        setIsVerifying(false);
-        setTransactionPin('');
-        setErrorMessage('');
-        setTransactionData(null);
-    };
+  const handleClose = () => { onClose(); setTimeout(reset, 300); };
 
-    const handleClose = () => {
-        onClose();
-        setTimeout(reset, 300);
-    };
+  useEffect(() => {
+    if (isJamb && profileId.length === 10 && !verifiedName && !isVerifying) {
+      handleVerifyProfile();
+    } else if (profileId.length !== 10) {
+      setVerifiedName(null);
+    }
+  }, [profileId, provider]);
 
-    const handleProviderSelect = (selected: Provider) => {
-        setProvider(selected);
-        setErrorMessage('');
-        setStep('DETAILS');
-    };
+  const handleVerifyProfile = async () => {
+    if (profileId.length !== 10) return;
+    setIsVerifying(true);
+    setErrorMessage('');
+    setVerifiedName(null);
+    const result = await verifyJambProfile(profileId);
+    setIsVerifying(false);
+    if (result.success && result.data?.customer_name) {
+      setVerifiedName(result.data.customer_name);
+    } else {
+      setErrorMessage(result.error || 'Failed to verify Profile ID.');
+    }
+  };
 
-    // Verify JAMB Profile ID when it reaches 10 digits
-    useEffect(() => {
-        const isJambProvider = provider === 'JAMB' || provider === 'JAMB_MOCK';
-        if (isJambProvider && profileId.length === 10 && !verifiedName && !isVerifying) {
-            handleVerifyProfile();
-        } else if (profileId.length !== 10) {
-            setVerifiedName(null);
-        }
-    }, [profileId, provider]);
+  const handleProceedToConfirm = () => {
+    setErrorMessage('');
+    if (phoneNo.length < 10) { setErrorMessage('Please enter a valid phone number'); return; }
+    if (isJamb && (!verifiedName || profileId.length !== 10)) {
+      setErrorMessage('Please enter and verify a valid JAMB Profile ID first');
+      return;
+    }
+    setStep('CONFIRM');
+  };
 
-    const handleVerifyProfile = async () => {
-        if (profileId.length !== 10) return;
+  const handlePurchase = async (pinToUse: string) => {
+    if (!provider) return;
+    if (pinToUse.length !== 4) { setErrorMessage('Please enter a valid 4-digit PIN'); return; }
+    setIsPurchasing(true);
+    setErrorMessage('');
+    const backendProvider = isJamb ? 'JAMB' : 'WAEC';
+    const passedProfileId = isJamb ? profileId : undefined;
+    const result = await buyEducationPin(backendProvider, product!.examType, phoneNo, pinToUse, passedProfileId);
+    setIsPurchasing(false);
+    if (result.success) {
+      setTransactionData({ status: result.status, details: result.data?.cardDetails, message: result.message });
+      setStep('SUCCESS');
+      if (onRefresh) onRefresh();
+    } else {
+      setErrorMessage(result.error || 'Transaction failed. Please try again.');
+      setTransactionPin('');
+    }
+  };
 
-        setIsVerifying(true);
-        setErrorMessage('');
-        setVerifiedName(null);
+  const getOnBack = () => {
+    if (step === 'DETAILS') return () => { setStep('PROVIDER'); setErrorMessage(''); };
+    if (step === 'CONFIRM') return () => setStep('DETAILS');
+    if (step === 'PIN')     return () => { setStep('CONFIRM'); setTransactionPin(''); setErrorMessage(''); };
+    return undefined;
+  };
 
-        const result = await verifyJambProfile(profileId);
+  const canProceed = phoneNo.length >= 10 && (!isJamb || !!verifiedName);
 
-        setIsVerifying(false);
+  return (
+    <BottomSheet isOpen={isOpen} onClose={handleClose} onBack={getOnBack()}
+      title={step === 'SUCCESS' ? 'Transaction Status' : 'Education Payment'}>
+      <div className="h-[88svh] w-full flex flex-col">
 
-        if (result.success && result.data?.customer_name) {
-            setVerifiedName(result.data.customer_name);
-        } else {
-            setErrorMessage(result.error || 'Failed to verify profile ID.');
-        }
-    };
+        {/* Error Banner */}
+        <AnimatePresence>
+          {errorMessage && step !== 'SUCCESS' && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+              className="bg-red-50 text-red-600 p-3.5 rounded-2xl text-sm font-medium mb-4 flex items-start gap-3 border border-red-100 shrink-0">
+              <AlertCircle size={17} className="shrink-0 mt-0.5" />
+              <span>{errorMessage}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-    const handleProceedToConfirm = () => {
-        setErrorMessage('');
-        if (phoneNo.length < 10) {
-            setErrorMessage('Please enter a valid phone number');
-            return;
-        }
-        const isJambProvider = provider === 'JAMB' || provider === 'JAMB_MOCK';
-        if (isJambProvider && (!verifiedName || profileId.length !== 10)) {
-            setErrorMessage('Please enter and verify a valid JAMB Profile ID first');
-            return;
-        }
-        setStep('CONFIRM');
-    };
-
-    const handlePurchase = async (pinToUse: string) => {
-        if (!provider) return;
-        if (pinToUse.length !== 4) {
-            setErrorMessage("Please enter a valid 4-digit PIN");
-            return;
-        }
-
-        setIsPurchasing(true);
-        setErrorMessage('');
-
-        const product = EDUCATION_PRODUCTS[provider];
-        const isJambProvider = provider === 'JAMB' || provider === 'JAMB_MOCK';
-        // Use 'JAMB' provider explicitly for backend endpoint when calling buyEducationPin 
-        // to match backend expectations "JAMB" / "WAEC"
-        const backendProvider = isJambProvider ? 'JAMB' : 'WAEC';
-        const passedProfileId = isJambProvider ? profileId : undefined;
-
-        const result = await buyEducationPin(backendProvider, product.examType, phoneNo, pinToUse, passedProfileId);
-
-        setIsPurchasing(false);
-
-        if (result.success) {
-            setTransactionData({
-                status: result.status, // 'OK' or 'PENDING'
-                details: result.data?.cardDetails, // The PIN/Serial string
-                message: result.message // For PENDING: "Connection delay... etc."
-            });
-            setStep('SUCCESS');
-            if (onRefresh) onRefresh();
-        } else {
-            setErrorMessage(result.error || 'Transaction failed. Please try again.');
-            setTransactionPin('');
-        }
-    };
-
-    const getOnBack = () => {
-        if (step === 'DETAILS') return () => setStep('PROVIDER');
-        if (step === 'CONFIRM') return () => setStep('DETAILS');
-        if (step === 'PIN') return () => {
-            setStep('CONFIRM');
-            setTransactionPin('');
-            setErrorMessage('');
-        };
-        return undefined;
-    };
-
-    return (
-        <BottomSheet
-            isOpen={isOpen}
-            onClose={handleClose}
-            onBack={getOnBack()}
-            title={step === 'SUCCESS' ? 'Transaction Status' : 'Education Payment'}
-        >
-            <div className="h-[75svh] w-full flex flex-col">
-                {errorMessage && step !== 'SUCCESS' && (
-                    <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-medium mb-4 flex items-center gap-2 border border-red-100">
-                        <AlertCircle size={16} className="shrink-0" /> {errorMessage}
+        {/* ── STEP 1: PROVIDER ── */}
+        {step === 'PROVIDER' && (
+          <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25 }}
+            className="flex flex-col flex-1 h-full w-full">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Select Service</p>
+            <div className="space-y-3">
+              {(Object.keys(EDUCATION_PRODUCTS) as Provider[]).map((prov, i) => {
+                const info = EDUCATION_PRODUCTS[prov];
+                const Icon = PROVIDER_ICONS[prov];
+                return (
+                  <motion.button
+                    key={prov}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.06 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => { setProvider(prov); setErrorMessage(''); setStep('DETAILS'); }}
+                    className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-gray-100 bg-white transition-all hover:border-gray-200 text-left"
+                  >
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm"
+                      style={{ backgroundColor: info.lightColor }}>
+                      <Icon size={22} style={{ color: info.color }} />
                     </div>
-                )}
-
-                {step === 'PROVIDER' && (
-                    <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex flex-col flex-1 h-full w-full"
-                    >
-                        <p className="text-gray-500 mb-4 text-sm font-medium">Select an education service</p>
-                        <div className="space-y-4">
-                            {(Object.keys(EDUCATION_PRODUCTS) as Provider[]).map((prov) => {
-                                const info = EDUCATION_PRODUCTS[prov];
-                                const Icon = info.icon;
-                                return (
-                                    <div
-                                        key={prov}
-                                        onClick={() => handleProviderSelect(prov)}
-                                        className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-white shadow-sm active:bg-indigo-50 active:border-indigo-200 cursor-pointer transition-all hover:shadow-md group"
-                                    >
-                                        <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
-                                            <Icon size={24} />
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-gray-900">{prov}</h3>
-                                            <p className="text-sm text-gray-500">{info.name}</p>
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </motion.div>
-                )}
-
-                {step === 'DETAILS' && (
-                    <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex flex-col flex-1 h-full w-full"
-                    >
-
-                        <div className="flex-1 overflow-y-auto no-scrollbar pb-4 space-y-4">
-
-                            {(provider === 'JAMB' || provider === 'JAMB_MOCK') && (
-                                <div className="space-y-1">
-                                    <Input
-                                        label="JAMB Profile ID"
-                                        placeholder="Enter 10-digit Profile ID"
-                                        type="text"
-                                        maxLength={10}
-                                        value={profileId}
-                                        onChange={(e) => {
-                                            setProfileId(e.target.value.replace(/\D/g, ''));
-                                            setErrorMessage('');
-                                        }}
-                                        leftIcon={<User size={18} />}
-                                    />
-
-                                    {isVerifying ? (
-                                        <div className="flex items-center gap-2 text-primary text-sm font-medium px-2">
-                                            <Loader2 size={14} className="animate-spin" /> Verifying Profile ID...
-                                        </div>
-                                    ) : verifiedName ? (
-                                        <div className="flex items-center justify-between bg-green-50 px-4 py-3 rounded-lg border border-green-100">
-                                            <div className="flex items-center gap-2 text-green-700">
-                                                <CheckCircle size={16} />
-                                                <span className="text-sm font-semibold">{verifiedName}</span>
-                                            </div>
-                                        </div>
-                                    ) : profileId.length === 10 && !verifiedName && !errorMessage ? (
-                                        <Button variant="outline" className="mt-2 text-xs py-1.5" onClick={handleVerifyProfile}>
-                                            Verify Manually
-                                        </Button>
-                                    ) : null}
-                                </div>
-                            )}
-
-                            <Input
-                                label="Phone Number"
-                                placeholder="08012345678"
-                                type="tel"
-                                maxLength={11}
-                                value={phoneNo}
-                                onChange={(e) => {
-                                    setPhoneNo(e.target.value.replace(/\D/g, ''));
-                                    setErrorMessage('');
-                                }}
-                                leftIcon={<Phone size={18} />}
-                            />
-                        </div>
-
-                        <div className="mt-auto pt-4 pb-2">
-                            <Button
-                                fullWidth
-                                disabled={phoneNo.length < 10 || ((provider === 'JAMB' || provider === 'JAMB_MOCK') && !verifiedName)}
-                                onClick={handleProceedToConfirm}
-                            >
-                                Proceed
-                            </Button>
-                        </div>
-                    </motion.div>
-                )}
-
-                {step === 'CONFIRM' && provider && (
-                    <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex flex-col flex-1 h-full w-full"
-                    >
-
-                        <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-6 mb-6">
-                            <div className="text-center mb-6">
-                                <p className="text-gray-500 text-sm mb-1">You are about to purchase</p>
-                                <h3 className="text-xl font-bold text-gray-900 mb-1">{EDUCATION_PRODUCTS[provider].name}</h3>
-                                <p className="text-primary font-bold text-2xl">{CURRENCY}{EDUCATION_PRODUCTS[provider].price.toLocaleString()}</p>
-                            </div>
-
-                            <div className="space-y-3 border-t border-gray-100 pt-4">
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500 text-sm">Provider</span>
-                                    <span className="font-semibold text-gray-900">{provider === 'JAMB_MOCK' ? 'JAMB' : provider}</span>
-                                </div>
-                                {(provider === 'JAMB' || provider === 'JAMB_MOCK') && (
-                                    <div className="flex flex-col gap-1">
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-500 text-sm">Profile ID</span>
-                                            <span className="font-semibold text-gray-900">{profileId}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-500 text-sm">Name</span>
-                                            <span className="font-semibold text-gray-900 text-right">{verifiedName}</span>
-                                        </div>
-                                    </div>
-                                )}
-                                <div className="flex justify-between">
-                                    <span className="text-gray-500 text-sm">Phone Number</span>
-                                    <span className="font-semibold text-gray-900">{phoneNo}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-auto pt-4 pb-2">
-                            <Button
-                                fullWidth
-                                onClick={() => setStep('PIN')}
-                                disabled={isPurchasing}
-                            >
-                                Proceed
-                            </Button>
-                        </div>
-                    </motion.div>
-                )}
-
-                {step === 'PIN' && (
-                    <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex flex-col flex-1 h-full w-full"
-                    >
-                        <div className="flex-1 flex flex-col items-center justify-center -mt-10">
-                            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
-                                <Lock size={28} />
-                            </div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-2">Enter Transaction PIN</h3>
-                            <p className="text-sm text-slate-500 mb-8 text-center px-4">
-                                Please enter your 4-digit PIN to authorize this payment of <span className="font-bold text-slate-700">{CURRENCY}{EDUCATION_PRODUCTS[provider!].price.toLocaleString()}</span>
-                            </p>
-
-                            <PinInput
-                                length={4}
-                                value={transactionPin}
-                                onChange={(val) => {
-                                    setTransactionPin(val);
-                                    if (errorMessage) setErrorMessage('');
-                                }}
-                                onComplete={(val) => {
-                                    handlePurchase(val);
-                                }}
-                                disabled={isPurchasing}
-                                error={errorMessage}
-                            />
-                        </div>
-
-                        <div className="mt-auto pt-4 shrink-0">
-                            <Button
-                                fullWidth
-                                onClick={() => handlePurchase(transactionPin)}
-                                disabled={isPurchasing || transactionPin.length !== 4}
-                                className="h-14 text-base rounded-2xl shadow-md"
-                            >
-                                {isPurchasing ? (
-                                    <span className="flex items-center gap-2 justify-center">
-                                        <Loader2 size={20} className="animate-spin" /> Verifying...
-                                    </span>
-                                ) : (
-                                    'Confirm PIN'
-                                )}
-                            </Button>
-                        </div>
-                    </motion.div>
-                )}
-
-                {step === 'SUCCESS' && provider && (
-                    <motion.div
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="flex flex-col items-center justify-center flex-1 h-full w-full text-center pb-8"
-                    >
-                        {transactionData?.status === 'PENDING' ? (
-                            <>
-                                <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mb-6 text-amber-500 shadow-sm">
-                                    <Loader2 size={48} className="animate-spin" />
-                                </div>
-                                <h3 className="text-2xl font-bold text-gray-900 mb-2">Request Accepted</h3>
-                                <p className="text-gray-500 mb-4 px-4">{transactionData.message || 'Connection delay with the board. Your PIN is being generated.'}</p>
-                                <p className="text-sm text-gray-400">You will receive the PIN shortly.</p>
-                            </>
-                        ) : (
-                            <>
-                                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-500 shadow-sm">
-                                    <CheckCircle size={48} strokeWidth={3} />
-                                </div>
-                                <h3 className="text-2xl font-bold text-gray-900 mb-2">Purchase Successful</h3>
-                                <p className="text-gray-500 mb-6">Your {provider.replace('_', ' ')} PIN has been generated.</p>
-
-                                {transactionData?.details && (
-                                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200 w-full mb-6">
-                                        <p className="text-xs text-gray-500 uppercase tracking-wider mb-2 font-semibold">PIN Details</p>
-                                        <p className="font-mono text-sm text-gray-800 break-all">{transactionData.details}</p>
-                                    </div>
-                                )}
-                            </>
-                        )}
-
-                        <div className="w-full mt-auto pt-4">
-                            <Button variant="secondary" fullWidth onClick={handleClose}>
-                                Done
-                            </Button>
-                        </div>
-                    </motion.div>
-                )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-gray-900 text-sm">{info.name}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{info.subtitle}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="font-black text-base" style={{ color: info.color }}>
+                        {CURRENCY}{info.price.toLocaleString()}
+                      </p>
+                    </div>
+                  </motion.button>
+                );
+              })}
             </div>
-        </BottomSheet>
-    );
+          </motion.div>
+        )}
+
+        {/* ── STEP 2: DETAILS ── */}
+        {step === 'DETAILS' && product && (
+          <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25 }}
+            className="flex flex-col flex-1 h-full w-full">
+
+            {/* Selected service card */}
+            <div className="rounded-3xl overflow-hidden mb-5 border-2"
+              style={{ borderColor: pc + '30', backgroundColor: pc + '08' }}>
+              <div className="h-1.5 w-full" style={{ background: `linear-gradient(to right, ${pc}80, ${pc})` }} />
+              <div className="p-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: product.lightColor }}>
+                  {React.createElement(PROVIDER_ICONS[provider!], { size: 18, style: { color: pc } })}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-gray-900 text-sm">{product.name}</p>
+                  <p className="text-xs text-gray-400">{product.subtitle}</p>
+                </div>
+                <p className="font-black text-lg shrink-0" style={{ color: pc }}>
+                  {CURRENCY}{product.price.toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto no-scrollbar space-y-4 pb-4">
+
+              {/* JAMB Profile ID */}
+              {isJamb && (
+                <div>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">JAMB Profile ID</p>
+                  <div className="flex items-center gap-3 bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5 focus-within:border-blue-400 focus-within:bg-white transition-all">
+                    <User size={16} className="text-gray-400 shrink-0" />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={10}
+                      value={profileId}
+                      onChange={(e) => { setProfileId(e.target.value.replace(/\D/g, '')); setErrorMessage(''); }}
+                      placeholder="10-digit Profile ID"
+                      className="flex-1 bg-transparent outline-none text-gray-900 font-semibold text-base placeholder-gray-300"
+                    />
+                    {isVerifying && <Loader2 size={16} className="animate-spin text-blue-400 shrink-0" />}
+                    {verifiedName && <Check size={16} className="text-emerald-500 shrink-0" />}
+                  </div>
+
+                  <AnimatePresence>
+                    {isVerifying && (
+                      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="text-xs text-blue-500 font-medium mt-2 px-1">
+                        Verifying Profile ID...
+                      </motion.p>
+                    )}
+                    {verifiedName && !isVerifying && (
+                      <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+                        className="flex items-center gap-2 mt-2 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2">
+                        <CheckCircle size={14} className="text-emerald-600 shrink-0" />
+                        <span className="text-sm font-bold text-emerald-700">{verifiedName}</span>
+                      </motion.div>
+                    )}
+                    {profileId.length === 10 && !verifiedName && !isVerifying && !errorMessage && (
+                      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                        <button onClick={handleVerifyProfile}
+                          className="text-xs font-bold mt-2 px-3 py-1.5 rounded-xl border-2 ml-1"
+                          style={{ borderColor: pc + '40', color: pc, backgroundColor: pc + '08' }}>
+                          Verify Manually
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              {/* Phone Number */}
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Phone Number</p>
+                <div className="flex items-center gap-3 bg-gray-50 border-2 border-gray-100 rounded-2xl px-4 py-3.5 focus-within:border-blue-400 focus-within:bg-white transition-all">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm"
+                    style={{ backgroundColor: pc }}>
+                    <Phone size={14} className="text-white" />
+                  </div>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={11}
+                    value={phoneNo}
+                    onChange={(e) => { setPhoneNo(e.target.value.replace(/\D/g, '')); setErrorMessage(''); }}
+                    placeholder="08012345678"
+                    className="flex-1 bg-transparent outline-none text-gray-900 font-semibold text-base placeholder-gray-300"
+                  />
+                  {phoneNo.length >= 10 && <CheckCircle size={18} className="text-emerald-500 shrink-0" />}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-auto pt-3 shrink-0">
+              <Button fullWidth disabled={!canProceed} onClick={handleProceedToConfirm}
+                className="h-14 text-base rounded-2xl shadow-md font-semibold">
+                {!phoneNo || phoneNo.length < 10
+                  ? 'Enter Phone Number'
+                  : isJamb && !verifiedName
+                  ? 'Verify Profile ID First'
+                  : `Proceed — ${CURRENCY}${product.price.toLocaleString()}`}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── STEP 3: CONFIRM ── */}
+        {step === 'CONFIRM' && product && provider && (
+          <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25 }}
+            className="flex flex-col flex-1 h-full w-full">
+
+            <div className="bg-white border border-gray-100 shadow-lg rounded-3xl overflow-hidden mb-6">
+              <div className="h-2 w-full" style={{ background: `linear-gradient(to right, ${pc}80, ${pc})` }} />
+              <div className="p-5 text-center">
+                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg"
+                  style={{ backgroundColor: product.lightColor }}>
+                  {React.createElement(PROVIDER_ICONS[provider], { size: 26, style: { color: pc } })}
+                </div>
+                <p className="text-gray-400 text-xs mb-1 uppercase tracking-widest">You are purchasing</p>
+                <p className="font-bold text-gray-900 text-base mb-1">{product.name}</p>
+                <p className="font-black text-5xl mb-4" style={{ color: pc }}>
+                  {CURRENCY}{product.price.toLocaleString()}
+                </p>
+                <div className="border-t-2 border-dashed border-gray-100 relative my-4">
+                  <div className="absolute -left-7 -top-3 w-6 h-6 bg-gray-50 rounded-full" />
+                  <div className="absolute -right-7 -top-3 w-6 h-6 bg-gray-50 rounded-full" />
+                </div>
+                <div className="space-y-2 text-sm text-left">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-400">Phone</span>
+                    <span className="font-mono font-bold text-gray-900">{phoneNo}</span>
+                  </div>
+                  {isJamb && (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Profile ID</span>
+                        <span className="font-mono font-bold text-gray-900">{profileId}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Name</span>
+                        <span className="font-bold text-gray-900 text-right max-w-[55%]">{verifiedName}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-auto pt-2 shrink-0">
+              <Button fullWidth onClick={() => setStep('PIN')} disabled={isPurchasing}
+                className="h-14 text-base rounded-2xl shadow-md font-semibold">
+                Proceed to Payment
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── STEP 4: PIN ── */}
+        {step === 'PIN' && product && (
+          <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25 }}
+            className="flex flex-col flex-1 h-full w-full">
+            <div className="flex-1 flex flex-col items-center justify-center -mt-8 px-2">
+              <div className="relative mb-6">
+                <div className="w-20 h-20 rounded-full bg-blue-50 flex items-center justify-center shadow-[0_0_40px_rgba(99,102,241,0.12)]">
+                  <Lock size={32} className="text-blue-500" />
+                </div>
+                <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center shadow">
+                  <Shield size={13} className="text-white" />
+                </div>
+              </div>
+              <h3 className="text-xl font-extrabold text-slate-900 mb-2">Authorize Payment</h3>
+              <p className="text-sm text-slate-400 mb-2 text-center px-6">Enter your 4-digit PIN to confirm</p>
+              <div className="rounded-2xl px-5 py-2.5 mb-8 border"
+                style={{ backgroundColor: pc + '12', borderColor: pc + '30' }}>
+                <p className="font-black text-lg text-center" style={{ color: pc }}>
+                  {CURRENCY}{product.price.toLocaleString()}
+                </p>
+                <p className="text-xs text-center font-medium text-gray-500">{product.name}</p>
+              </div>
+              <PinInput length={4} value={transactionPin}
+                onChange={(val) => { setTransactionPin(val); if (errorMessage) setErrorMessage(''); }}
+                onComplete={(val) => handlePurchase(val)}
+                disabled={isPurchasing} error={errorMessage} />
+            </div>
+            <div className="mt-auto pt-4 shrink-0">
+              <Button fullWidth onClick={() => handlePurchase(transactionPin)}
+                disabled={isPurchasing || transactionPin.length !== 4}
+                className="h-14 text-base rounded-2xl shadow-md font-semibold">
+                {isPurchasing
+                  ? <span className="flex items-center gap-2 justify-center"><Loader2 size={20} className="animate-spin" /> Processing...</span>
+                  : 'Confirm Payment'}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* ── STEP 5: SUCCESS ── */}
+        {step === 'SUCCESS' && product && provider && (
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+            className="flex flex-col items-center justify-center flex-1 h-full w-full text-center pb-8">
+
+            {transactionData?.status === 'PENDING' ? (
+              <>
+                <div className="w-28 h-28 bg-amber-50 rounded-full flex items-center justify-center mb-5
+                  shadow-[0_0_50px_rgba(245,158,11,0.18)] ring-[10px] ring-amber-50/60">
+                  <Loader2 size={56} className="animate-spin text-amber-500" />
+                </div>
+                <h3 className="text-2xl font-extrabold text-gray-900 mb-2 tracking-tight">Request Accepted</h3>
+                <p className="text-gray-400 mb-6 text-sm px-6 leading-relaxed">
+                  {transactionData.message || 'Connection delay with the board. Your PIN is being generated.'}
+                </p>
+                <div className="w-full bg-amber-50 border border-amber-100 rounded-2xl p-4 mb-8">
+                  <p className="text-xs text-amber-600 font-bold uppercase tracking-widest mb-1">Status</p>
+                  <p className="text-sm text-amber-700 font-medium">You will receive your PIN shortly via the app.</p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="w-28 h-28 bg-emerald-50 rounded-full flex items-center justify-center mb-5
+                  shadow-[0_0_50px_rgba(34,197,94,0.18)] ring-[10px] ring-emerald-50/60">
+                  <CheckCircle size={60} className="text-emerald-500" strokeWidth={2} />
+                </div>
+                <h3 className="text-2xl font-extrabold text-gray-900 mb-2 tracking-tight">Purchase Successful!</h3>
+                <p className="text-gray-400 mb-5 text-sm">{product.name} PIN generated</p>
+
+                {/* PIN / card details */}
+                {transactionData?.details && (
+                  <div className="w-full rounded-3xl overflow-hidden border-2 mb-6"
+                    style={{ borderColor: pc + '30', backgroundColor: pc + '06' }}>
+                    <div className="h-1.5" style={{ background: `linear-gradient(to right, ${pc}80, ${pc})` }} />
+                    <div className="p-4">
+                      <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: pc }}>PIN Details</p>
+                      <p className="font-mono font-bold text-gray-900 break-all text-sm leading-relaxed tracking-wider">
+                        {transactionData.details}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Summary */}
+                <div className="w-full bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-sm mb-8">
+                  <div className="h-1.5" style={{ background: `linear-gradient(to right, ${pc}80, ${pc})` }} />
+                  <div className="p-4 flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: product.lightColor }}>
+                      {React.createElement(PROVIDER_ICONS[provider], { size: 18, style: { color: pc } })}
+                    </div>
+                    <div className="text-left flex-1 min-w-0">
+                      <p className="text-xs text-gray-400 font-semibold truncate">{product.name}</p>
+                      <p className="font-mono font-bold text-gray-900">{phoneNo}</p>
+                    </div>
+                    <p className="font-black text-base shrink-0" style={{ color: pc }}>
+                      {CURRENCY}{product.price.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="w-full mt-auto pt-2 shrink-0">
+              <Button variant="secondary" fullWidth onClick={handleClose}
+                className="h-14 text-base rounded-2xl font-bold bg-gray-100 text-gray-700 hover:bg-gray-200">
+                Done
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </BottomSheet>
+  );
 };
 
 export default BuyEducationModal;

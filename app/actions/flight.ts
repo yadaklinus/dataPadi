@@ -225,3 +225,23 @@ export async function getFlightTransactions() {
         return { success: false, error: 'Network connection failed' };
     }
 }
+
+/**
+ * Get the embedded flight booking link
+ */
+export async function getFlightLink() {
+    try {
+        const response = await authorizedFetch('/api/v1/flights/link');
+        const result = await response.json();
+
+        if (!response.ok) {
+            return { success: false, error: result.message || 'Failed to get flight link.' };
+        }
+
+        return { success: true, url: result.url as string };
+    } catch (error) {
+        if (isRedirect(error)) throw error;
+        console.error('Get Flight Link Error:', error);
+        return { success: false, error: 'Network connection failed' };
+    }
+}
