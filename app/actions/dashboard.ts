@@ -26,7 +26,6 @@ export async function getDashboardData() {
 
     const result = await response.json();
 
-    console.log(result)
 
 
 

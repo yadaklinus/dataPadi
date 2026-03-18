@@ -113,7 +113,6 @@ export async function payElectricity(payload: ElectricityPaymentPayload): Promis
 
     const result = await response.json();
 
-    console.log(result)
 
     if (!response.ok) {
       return { success: false, error: result.message || 'Payment failed' };

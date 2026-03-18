@@ -24,15 +24,13 @@ export async function initializeGatewayFunding(amount: number): Promise<{ succes
       };
     }
 
-    console.log(result)
-
     return {
       success: false,
       error: result.message || 'Failed to initialize payment'
     };
   } catch (error) {
     if (isRedirect(error)) throw error;
-    console.log(error)
+    console.error(error)
     return { success: false, error: 'Failed to connect to payment gateway' };
   }
 }

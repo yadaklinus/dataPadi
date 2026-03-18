@@ -147,7 +147,6 @@ export async function getFlightRequest(requestId: string) {
             return { success: false, error: result.message || 'Failed to fetch flight request details.' };
         }
 
-        console.log(result.data)
 
         return {
             success: true,

@@ -33,9 +33,6 @@ export async function authorizedFetch(endpoint: string, options: RequestInit = {
   });
   const endTime = Date.now();
 
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[API] ${options.method || 'GET'} ${endpoint} - ${response.status} (${endTime - startTime}ms)`);
-  }
 
   // Handle unauthorized or forbidden (expired token or invalid session)
   if (response.status === 401 || response.status === 403) {
