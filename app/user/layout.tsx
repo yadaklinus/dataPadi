@@ -2,6 +2,8 @@
 import BottomNav from '@/components/layout/BottomNav';
 import React from 'react';
 import { cookies } from 'next/headers';
+import PersistentFlights from '@/components/flights/PersistentFlights';
+
 
 export default async function DashboardLayout({
   children,
@@ -14,6 +16,7 @@ export default async function DashboardLayout({
   return (
     <>
       {children}
+      <PersistentFlights />
       <BottomNav />
     </>
   );
