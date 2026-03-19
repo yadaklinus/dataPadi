@@ -244,7 +244,24 @@ export async function verifyJambProfile(profileId: string) {
   }
 }
 
-export async function buyEducationPin(provider: 'WAEC' | 'JAMB', examType: string, phoneNo: string, transactionPin: string, profileId?: string) {
+export async function getEducationPackages(provider: 'WAEC' | 'JAMB' | 'JAMB_MOCK' | 'NECO' | 'NABTEB') {
+  try {
+    const response = await authorizedFetch(`/api/v1/education/packages?provider=${provider}`);
+    const result = await response.json();
+
+    if (!response.ok) return { success: false, error: result.message || 'Failed to fetch packages' };
+
+    return {
+      success: true,
+      data: result.data as any[]
+    };
+  } catch (error) {
+    if (isRedirect(error)) throw error;
+    return { success: false, error: 'Network connection failed' };
+  }
+}
+
+export async function buyEducationPin(provider: 'WAEC' | 'JAMB' | 'JAMB_MOCK' | 'NECO' | 'NABTEB', examType: string, phoneNo: string, transactionPin: string, profileId?: string) {
   try {
     const body: any = { provider, examType, phoneNo, transactionPin };
     if (provider === 'JAMB' && profileId) {

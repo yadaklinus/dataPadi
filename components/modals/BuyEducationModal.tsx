@@ -6,7 +6,7 @@ import PinInput from '../ui/PinInput';
 import { CURRENCY } from '@/constants';
 import { Phone, CheckCircle, AlertCircle, Loader2, GraduationCap, FileText, User, Lock, Shield, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { verifyJambProfile, buyEducationPin } from '@/app/actions/vtu';
+import { verifyJambProfile, buyEducationPin, getEducationPackages } from '@/app/actions/vtu';
 
 interface BuyEducationModalProps {
   isOpen: boolean;
@@ -14,48 +14,32 @@ interface BuyEducationModalProps {
   onRefresh?: () => void;
 }
 
-type Provider = 'WAEC' | 'JAMB' | 'JAMB_MOCK';
+type Provider = 'WAEC' | 'JAMB' | 'JAMB_MOCK' | 'NECO' | 'NABTEB';
 type Step = 'PROVIDER' | 'DETAILS' | 'CONFIRM' | 'PIN' | 'SUCCESS';
 
-const EDUCATION_PRODUCTS: Record<Provider, {
-  name: string; price: number; examType: string;
-  color: string; lightColor: string; subtitle: string;
-}> = {
-  WAEC: {
-    name: 'WAEC Result Checker',
-    price: 3500,
-    examType: 'waecdirect',
-    color: '#10b981',
-    lightColor: '#ecfdf5',
-    subtitle: 'Check WAEC/WASSCE results instantly',
-  },
-  JAMB: {
-    name: 'JAMB UTME (No Mock)',
-    price: 6200,
-    examType: 'utme-no-mock',
-    color: '#6366f1',
-    lightColor: '#eef2ff',
-    subtitle: 'UTME registration without mock exam',
-  },
-  JAMB_MOCK: {
-    name: 'JAMB UTME (With Mock)',
-    price: 7700,
-    examType: 'utme-mock',
-    color: '#8b5cf6',
-    lightColor: '#f5f3ff',
-    subtitle: 'UTME registration including mock exam',
-  },
-};
+interface EducationProduct {
+  name: string;
+  price: number;
+  examType: string;
+  color: string;
+  lightColor: string;
+  subtitle: string;
+  type: Provider;
+}
 
-const PROVIDER_ICONS: Record<Provider, typeof FileText> = {
+const PROVIDER_ICONS: Record<string, typeof FileText> = {
   WAEC: FileText,
   JAMB: GraduationCap,
   JAMB_MOCK: GraduationCap,
+  NECO: FileText,
+  NABTEB: FileText,
 };
 
 const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose, onRefresh }) => {
   const [step, setStep] = useState<Step>('PROVIDER');
   const [provider, setProvider] = useState<Provider | null>(null);
+  const [products, setProducts] = useState<EducationProduct[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [phoneNo, setPhoneNo] = useState('');
   const [profileId, setProfileId] = useState('');
   const [verifiedName, setVerifiedName] = useState<string | null>(null);
@@ -65,7 +49,7 @@ const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose, 
   const [errorMessage, setErrorMessage] = useState('');
   const [transactionData, setTransactionData] = useState<any>(null);
 
-  const product = provider ? EDUCATION_PRODUCTS[provider] : null;
+  const product = provider ? products.find(p => p.type === provider) : null;
   const isJamb = provider === 'JAMB' || provider === 'JAMB_MOCK';
   const pc = product?.color ?? '#6366f1';
 
@@ -85,6 +69,76 @@ const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose, 
   const handleClose = () => { onClose(); setTimeout(reset, 300); };
 
   useEffect(() => {
+    if (isOpen) {
+      fetchProducts();
+    }
+  }, [isOpen]);
+
+  const fetchProducts = async () => {
+    setIsLoadingProducts(true);
+    try {
+      const [waecRes, jambRes, jambMockRes, necoRes, nabtebRes] = await Promise.all([
+        getEducationPackages('WAEC'),
+        getEducationPackages('JAMB'),
+        getEducationPackages('JAMB_MOCK'),
+        getEducationPackages('NECO'),
+        getEducationPackages('NABTEB')
+      ]);
+
+      let allProducts: EducationProduct[] = [];
+      if (waecRes.success && waecRes.data) {
+        allProducts = [...allProducts, ...waecRes.data.map(p => ({
+          name: p.PRODUCT_NAME,
+          price: p.SELLING_PRICE,
+          examType: p.PRODUCT_CODE,
+          color: p.color,
+          lightColor: p.lightColor,
+          subtitle: p.subtitle,
+          type: p.type as Provider
+        }))];
+      }
+      if (jambMockRes.success && jambMockRes.data) {
+        allProducts = [...allProducts, ...jambMockRes.data.map(p => ({
+          name: p.PRODUCT_NAME,
+          price: p.SELLING_PRICE,
+          examType: p.PRODUCT_CODE,
+          color: p.color,
+          lightColor: p.lightColor,
+          subtitle: p.subtitle,
+          type: p.type as Provider
+        }))];
+      }
+      if (necoRes.success && necoRes.data) {
+        allProducts = [...allProducts, ...necoRes.data.map(p => ({
+          name: p.PRODUCT_NAME,
+          price: p.SELLING_PRICE,
+          examType: p.PRODUCT_CODE,
+          color: p.color,
+          lightColor: p.lightColor,
+          subtitle: p.subtitle,
+          type: p.type as Provider
+        }))];
+      }
+      if (nabtebRes.success && nabtebRes.data) {
+        allProducts = [...allProducts, ...nabtebRes.data.map(p => ({
+          name: p.PRODUCT_NAME,
+          price: p.SELLING_PRICE,
+          examType: p.PRODUCT_CODE,
+          color: p.color,
+          lightColor: p.lightColor,
+          subtitle: p.subtitle,
+          type: p.type as Provider
+        }))];
+      }
+      setProducts(allProducts);
+    } catch (err) {
+      console.error("Failed to fetch education products", err);
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
+
+  useEffect(() => {
     if (isJamb && profileId.length === 10 && !verifiedName && !isVerifying) {
       handleVerifyProfile();
     } else if (profileId.length !== 10) {
@@ -98,6 +152,7 @@ const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose, 
     setErrorMessage('');
     setVerifiedName(null);
     const result = await verifyJambProfile(profileId);
+    setIsVerifying(true); // Keep it true until state update is reflected or just false it after
     setIsVerifying(false);
     if (result.success && result.data?.customer_name) {
       setVerifiedName(result.data.customer_name);
@@ -121,7 +176,7 @@ const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose, 
     if (pinToUse.length !== 4) { setErrorMessage('Please enter a valid 4-digit PIN'); return; }
     setIsPurchasing(true);
     setErrorMessage('');
-    const backendProvider = isJamb ? 'JAMB' : 'WAEC';
+    const backendProvider = isJamb ? 'JAMB' : provider;
     const passedProfileId = isJamb ? profileId : undefined;
     const result = await buyEducationPin(backendProvider, product!.examType, phoneNo, pinToUse, passedProfileId);
     setIsPurchasing(false);
@@ -166,37 +221,43 @@ const BuyEducationModal: React.FC<BuyEducationModalProps> = ({ isOpen, onClose, 
           <motion.div initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25 }}
             className="flex flex-col flex-1 h-full w-full">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Select Service</p>
-            <div className="space-y-3">
-              {(Object.keys(EDUCATION_PRODUCTS) as Provider[]).map((prov, i) => {
-                const info = EDUCATION_PRODUCTS[prov];
-                const Icon = PROVIDER_ICONS[prov];
-                return (
-                  <motion.button
-                    key={prov}
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.06 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => { setProvider(prov); setErrorMessage(''); setStep('DETAILS'); }}
-                    className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-gray-100 bg-white transition-all hover:border-gray-200 text-left"
-                  >
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm"
-                      style={{ backgroundColor: info.lightColor }}>
-                      <Icon size={22} style={{ color: info.color }} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-gray-900 text-sm">{info.name}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">{info.subtitle}</p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="font-black text-base" style={{ color: info.color }}>
-                        {CURRENCY}{info.price.toLocaleString()}
-                      </p>
-                    </div>
-                  </motion.button>
-                );
-              })}
-            </div>
+            
+            {isLoadingProducts ? (
+              <div className="flex-1 flex items-center justify-center">
+                <Loader2 size={32} className="animate-spin text-blue-500" />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {products.map((info, i) => {
+                  const Icon = PROVIDER_ICONS[info.type] || PROVIDER_ICONS['JAMB'];
+                  return (
+                    <motion.button
+                      key={info.type}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.06 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => { setProvider(info.type); setErrorMessage(''); setStep('DETAILS'); }}
+                      className="w-full flex items-center gap-4 p-4 rounded-2xl border-2 border-gray-100 bg-white transition-all hover:border-gray-200 text-left"
+                    >
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm"
+                        style={{ backgroundColor: info.lightColor }}>
+                        <Icon size={22} style={{ color: info.color }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-gray-900 text-sm">{info.name}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{info.subtitle}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-black text-base" style={{ color: info.color }}>
+                          {CURRENCY}{info.price.toLocaleString()}
+                        </p>
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            )}
           </motion.div>
         )}
 
